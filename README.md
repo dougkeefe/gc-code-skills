@@ -41,6 +41,9 @@ A collection of Claude Code Skills that help developers review code for complian
 
    # Or add all skills at once
    claude skills add ./skills/*
+
+   # Or symlink individual skills
+   ln -s /path/to/gc-review-branding ~/.claude/skills/gc-review-branding
    ```
 
 3. **Verify installation:**
@@ -55,6 +58,7 @@ Invoke a skill during a Claude Code session:
 ```
 /accessibility-review src/components/
 /security-review --scope=auth
+/gc-review-branding
 /gc-compliance --full
 ```
 
@@ -126,14 +130,24 @@ Reviews code for compliance with:
 
 ---
 
-### 5. GC Branding (`/gc-branding-review`)
+### 5. GC Branding (`/gc-review-branding`)
 
 Reviews code for compliance with:
 - [Federal Identity Program](https://www.canada.ca/en/treasury-board-secretariat/services/government-communications/federal-identity-program.html)
+- [Federal Identity Program Manual](https://www.canada.ca/en/treasury-board-secretariat/services/government-communications/federal-identity-program/manual.html)
 - [Canada.ca Design System](https://design.canada.ca/)
-- Official GoC visual identity standards
+- [Policy on Communications and Federal Identity](https://www.tbs-sct.canada.ca/pol/doc-eng.aspx?id=30683)
 
-**Checks include:** Canada wordmark usage, official colors, typography, layout patterns, header/footer requirements, GC Design System components.
+**Checks include:**
+- Federal Identity Program (FIP) symbols (GC Signature, Canada Wordmark)
+- Language toggle (EN/FR) implementation
+- Typography compliance (Noto Sans)
+- GC Design System color tokens
+- Standard GC components vs custom implementations
+- Mandatory footer links (Privacy, Terms, Contact)
+- Date Modified format (YYYY-MM-DD)
+
+**Configuration:** See `gc-review-branding/CONFIG.md`
 
 [View Skill Specification](./skills/gc-branding-reviewer/SPEC.md)
 
