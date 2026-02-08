@@ -1,0 +1,9 @@
+# Git metadata
+.git/
+
+# Root documentation (not skill logic)
+/README.md
+/LICENSE.md
+
+# Developer context directory
+.context/
