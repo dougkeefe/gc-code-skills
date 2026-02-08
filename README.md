@@ -38,20 +38,8 @@ Reviews code for Official Languages Act compliance. Checks for hardcoded strings
 
 ## Installation
 
-**Clone the repository:**
 ```bash
-git clone https://github.com/dougkeefe/gc-code-skills.git
-cd gc-code-skills
-```
-
-**Add skills to Claude Code:**
-```bash
-# Add individual skills
-ln -s /path/to/gc-code-skills/gc-review-a11y ~/.claude/skills/gc-review-a11y
-ln -s /path/to/gc-code-skills/gc-review-security ~/.claude/skills/gc-review-security
-
-# Verify installation
-ls ~/.claude/skills/
+npx skills add dougkeefe/gc-code-skills
 ```
 
 ---
