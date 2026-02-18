@@ -23,7 +23,7 @@ Create `.gc-branding/config.json` in your project root to customize the review b
     "--dept-accent": "#custom-hex",
     "--dept-secondary": "#another-hex"
   },
-  "additionalFonts": ["Lato"],
+  "additionalFonts": ["Montserrat"],
   "excludePatterns": [
     "vendor/*",
     "*.generated.*",
