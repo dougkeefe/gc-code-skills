@@ -101,13 +101,14 @@ Verify the Federal Identity Program symbols are correctly implemented.
 
 **A. Government of Canada Signature (Header)**
 
-The GC Signature must appear in the global header, top-left position.
+The GC Signature must appear in the global header, top-left position, and must link to the Canada.ca home page.
 
 **What to look for:**
 - Image/component with "Government of Canada" or "Gouvernement du Canada"
 - SVG or image asset containing the flag symbol
 - Component names: `GCSignature`, `GovCanSignature`, `CanadaSignature`, or config override
 - Alt text containing "Government of Canada"
+- Wrapped in a link to `canada.ca/en` or `canada.ca/fr` (the Canada.ca home page)
 
 **Check patterns:**
 ```
@@ -120,11 +121,17 @@ gc-signature, gov-canada-sig, fip-signature
 # Alt text
 alt="Government of Canada"
 alt="Gouvernement du Canada"
+
+# Link target (must point to Canada.ca home)
+href="https://www.canada.ca/en.html"
+href="https://www.canada.ca/fr.html"
+href="https://canada.ca"
 ```
 
 **Violations:**
 - ❌ **Fail**: Signature completely missing from header
 - ❌ **Fail**: Signature not in header/top-left position
+- ❌ **Fail**: Signature not linked to Canada.ca home page
 - ⚠️ **Warning**: Signature present but missing bilingual alt text
 
 **B. Canada Wordmark (Footer)**
@@ -161,7 +168,7 @@ FIP symbols must use standard colors.
 **Official FIP Colors:**
 | Name | Hex | CSS Variable |
 |------|-----|--------------|
-| FIP Red | `#AF3C43` | `--gc-color-red` |
+| FIP Red | `#A62A1E` | `--gc-color-red` |
 | Black | `#000000` | `--gc-color-black` |
 | White | `#FFFFFF` | `--gc-color-white` |
 
@@ -195,33 +202,92 @@ English, Français, EN, FR
 - ❌ **Fail**: Toggle not functional (missing href or onClick)
 - ⚠️ **Warning**: Non-standard toggle format (e.g., "English/French" instead of "English/Français")
 
+**Note on transactional pages:** Language toggle omission is allowed only if toggling would result in data loss (legacy applications).
+
+### Step 5b: Additional Header Elements Check
+
+Verify the remaining mandatory header elements for standard pages.
+
+**Mandatory elements (standard pages):**
+
+| Element | Requirement | What to Look For |
+|---------|-------------|------------------|
+| Site Search Box | Must appear in header | `<input type="search">`, `role="search"`, search form component |
+| Theme and Topic Menu | Mandatory (removable if analytics show <1% usage) | Navigation menu, `<nav>`, menu toggle button |
+| Breadcrumb Trail | Must appear below header divider | `<nav aria-label="breadcrumb">`, breadcrumb component, "Canada.ca" as first item |
+| Divider Line | Separates header sections | `<hr>`, border-bottom styles on header rows |
+| White Background | Header must use white background | Background color on header container |
+
+**Check patterns:**
+```
+# Search box
+<input type="search", role="search", <SearchBox, <SiteSearch
+
+# Breadcrumb
+aria-label="breadcrumb", <Breadcrumb, <GCBreadcrumb
+"Canada.ca" as first breadcrumb item
+
+# Menu
+<GCMenu, <ThemeMenu, <TopicMenu
+```
+
+**Violations:**
+- ⚠️ **Warning**: Site search box missing from header (mandatory on standard pages)
+- ⚠️ **Warning**: Breadcrumb trail missing from header (mandatory on standard pages)
+- ⚠️ **Warning**: Breadcrumb does not start with "Canada.ca" as first item
+- ⚠️ **Warning**: Header background is not white
+
 ### Step 6: Typography Audit
 
 Scan stylesheets and theme files for font declarations.
 
 **Approved Fonts (GC Design System):**
-| Priority | Font Family |
-|----------|-------------|
-| Primary | `Noto Sans` |
-| Fallback 1 | `Helvetica` |
-| Fallback 2 | `Arial` |
-| Generic | `sans-serif` |
+
+| Context | Font Family | Weight | Notes |
+|---------|-------------|--------|-------|
+| Headings (H1–H6) | `Lato` | Bold | Primary heading font |
+| Body text | `Noto Sans` | Regular | Primary body font |
+| Indigenous languages | `Noto Sans Canadian Aboriginal` | Regular | Included by default |
+| Fallback | `Helvetica`, `Arial`, `sans-serif` | — | Generic fallback stack |
+
+**Expected Heading Sizes:**
+
+| Element | Desktop/Tablet | Smaller Devices |
+|---------|---------------|-----------------|
+| H1 | 41px | 37px |
+| H2 | 39px | 35px |
+| H3 | 29px | 26px |
+| H4 | 27px | 22px |
+| H5 | 24px | 20px |
+| H6 | 22px | 18px |
+| Body | 20px | 18px |
+
+**Line Length:** Constrain text line length to 65 characters maximum for readability.
 
 **What to scan:**
 ```css
 font-family: ...
 --font-family: ...
 fontFamily: ...
+max-width: ...ch
 ```
 
 **Violations:**
-- ⚠️ **Warning**: Primary font is not Noto Sans
+- ⚠️ **Warning**: Heading font is not Lato (H1–H6 must use Lato bold)
+- ⚠️ **Warning**: Body font is not Noto Sans
 - ⚠️ **Warning**: Non-approved font in font stack (e.g., Roboto, Open Sans, custom fonts)
+- ⚠️ **Warning**: Heading/body font sizes significantly deviate from GC spec
+- ⚠️ **Warning**: Text line length not constrained to ~65 characters
 
 **Acceptable patterns:**
 ```css
+/* Headings */
+font-family: "Lato", Helvetica, Arial, sans-serif;
+/* Body */
 font-family: "Noto Sans", Helvetica, Arial, sans-serif;
+/* CSS variable usage */
 font-family: var(--gc-font-family);
+font-family: var(--gc-heading-font-family);
 ```
 
 ### Step 7: Color Token Audit
@@ -231,11 +297,14 @@ Scan for non-compliant color values.
 **GC Design System Colors:**
 | Purpose | Hex | CSS Variable |
 |---------|-----|--------------|
-| Link/Primary | `#26374a` | `--gc-color-link` |
-| Link Hover | `#1c578a` | `--gc-color-link-hover` |
-| FIP Red | `#AF3C43` | `--gc-color-red` |
+| Link Default | `#284162` | `--gc-color-link` |
+| Link Hover/Focus | `#0535d2` | `--gc-color-link-hover` |
+| Link Visited | `#7834bc` | `--gc-color-link-visited` |
+| FIP Red / Accent | `#A62A1E` | `--gc-color-red` |
 | Text | `#333333` | `--gc-color-text` |
 | Background | `#FFFFFF` | `--gc-color-bg` |
+| Form Error | `#d3080c` | `--gc-color-error` |
+| Accent | `#26374A` | `--gc-color-accent` |
 | Muted | `#6c757d` | `--gc-color-muted` |
 
 **What to scan:**
@@ -245,7 +314,7 @@ Scan for non-compliant color values.
 - Tailwind config custom colors
 
 **Violations:**
-- ⚠️ **Warning**: Link color not using `#26374a` or `--gc-color-link`
+- ⚠️ **Warning**: Link color not using `#284162` or `--gc-color-link`
 - ⚠️ **Warning**: Custom color values not in approved palette
 - ⚠️ **Warning**: Hardcoded hex instead of CSS variable/token
 
@@ -259,6 +328,7 @@ Flag custom implementations of standard GC Design System components.
 
 | Component | Description | Patterns to Detect Custom |
 |-----------|-------------|---------------------------|
+| H1 Red Bar Accent | Red accent bar below main H1 | Missing or wrong color/size for H1 accent |
 | Alert | Notification banners | Custom `.alert`, `role="alert"` without GC styling |
 | Breadcrumb | Navigation trail | Custom breadcrumb without GC pattern |
 | Button | Action buttons | Custom button styles diverging from GC |
@@ -267,6 +337,11 @@ Flag custom implementations of standard GC Design System components.
 
 **What to look for:**
 ```
+# H1 Red Bar Accent
+# Must be: #A62A1E, 72px wide, 6px thick, positioned 0.2em below H1
+border-bottom, ::after, ::before on h1
+background-color or border-color matching #A62A1E
+
 # Custom Alert detection
 <div class="alert, <Alert (non-GC)
 role="alert" without gc-alert class
@@ -281,6 +356,8 @@ Format not YYYY-MM-DD
 ```
 
 **Violations:**
+- ⚠️ **Warning**: H1 red bar accent missing (should be `#A62A1E`, 72px wide, 6px thick, 0.2em below H1)
+- ⚠️ **Warning**: H1 red bar accent using wrong color or dimensions
 - ⚠️ **Warning**: Custom Alert component (should use GC Alert pattern)
 - ⚠️ **Warning**: Custom Button styling (should use GC Button)
 - ⚠️ **Warning**: Date Modified using wrong format (must be YYYY-MM-DD)
@@ -294,40 +371,58 @@ Format not YYYY-MM-DD
 </dl>
 ```
 
-### Step 9: Mandatory Links Check
+### Step 9: Footer Structure and Mandatory Links Check
 
-Verify required footer links are present.
+The GC global footer has a 3-band structure. Verify the correct bands and links are present.
 
-**Required Footer Links:**
+**A. Sub-footer Band (Mandatory on ALL page types)**
+
+This band must always be present, even on transactional and campaign pages.
+
+| Element | Purpose | URL Pattern |
+|---------|---------|-------------|
+| Terms and Conditions | Terms of use | `/terms`, `/conditions` |
+| Privacy | Privacy notice | `/privacy`, `/confidentialite` |
+| Canada Wordmark | FIP identity (checked in Step 4B) | Bottom-right position |
+
+**B. Main Footer Band (Mandatory on standard pages)**
+
 | Link | Purpose | URL Pattern |
 |------|---------|-------------|
-| Privacy | Privacy notice | `/privacy`, `/confidentialite` |
-| Terms and Conditions | Terms of use | `/terms`, `/conditions` |
-| Contact | Contact information | `/contact` |
+| All contacts | Contact directory | `/contact` |
+| Departments and agencies | GC org directory | `/government/dept`, `/gouvernement/min` |
+| About government | GC system info | `/government/system`, `/gouvernement/systeme` |
 
-**Additional Recommended Links:**
-- Social media links (with approved icons)
-- Departments and agencies
-- About government
+**C. Contextual Band (Optional)**
+
+Department-specific links. No mandatory requirements.
 
 **What to look for:**
 ```
-# Footer link patterns
+# Sub-footer links (mandatory on ALL pages)
 href="*/privacy*", href="*/confidentialite*"
 href="*/terms*", href="*/conditions*"
-href="*/contact*"
-
-# Text patterns
 "Privacy", "Confidentialité"
 "Terms and conditions", "Avis"
-"Contact", "Contactez"
+
+# Main band links (mandatory on standard pages)
+href="*/contact*"
+href="*/government/dept*", href="*/gouvernement/min*"
+href="*/government/system*", href="*/gouvernement/systeme*"
+"All contacts", "Tous les coordonnées"
+"Departments and agencies", "Ministères et organismes"
+"About government", "À propos du gouvernement"
 ```
 
 **Violations:**
-- ❌ **Fail**: Privacy link missing from footer
-- ❌ **Fail**: Terms and Conditions link missing from footer
-- ❌ **Fail**: Contact link missing from footer
-- ⚠️ **Warning**: Links present but not bilingual
+- ❌ **Fail**: Sub-footer band missing (Terms, Privacy, and Wordmark are mandatory on all page types)
+- ❌ **Fail**: Privacy link missing from sub-footer
+- ❌ **Fail**: Terms and Conditions link missing from sub-footer
+- ⚠️ **Warning**: Main footer band missing (mandatory on standard pages)
+- ⚠️ **Warning**: "All contacts" link missing from main footer band
+- ⚠️ **Warning**: "Departments and agencies" link missing from main footer band
+- ⚠️ **Warning**: "About government" link missing from main footer band
+- ⚠️ **Warning**: Footer links present but not bilingual
 
 ### Step 10: Present Compliance Report
 
@@ -346,10 +441,11 @@ Generate a structured compliance report.
 |----------|--------|--------|
 | FIP Symbols | ✅/❌ | [count] |
 | Language Toggle | ✅/❌ | [count] |
+| Header Elements | ✅/⚠️ | [count] |
 | Typography | ✅/⚠️ | [count] |
 | Color Tokens | ✅/⚠️ | [count] |
 | GC Components | ✅/⚠️ | [count] |
-| Mandatory Links | ✅/❌ | [count] |
+| Footer Structure | ✅/❌ | [count] |
 
 **Files Reviewed:** [count]
 **Issues Found:** [count] Failures, [count] Warnings
@@ -362,7 +458,7 @@ Generate a structured compliance report.
 |--------|------|-------------|-------------------|
 | ❌ **Fail** | `src/Footer.tsx:15` | Canada Wordmark missing from footer | Add the `CanadaWordmark` component or `<img src="/images/gc-wordmark.svg" alt="Symbol of the Government of Canada">` to the footer, positioned bottom-right |
 | ❌ **Fail** | `src/Header.tsx` | Language toggle missing | Add `LanguageToggle` component with EN/FR links |
-| ⚠️ **Warning** | `styles/theme.css:42` | Custom link color `#1a73e8` | Replace with GC Design System token `--gc-color-link` (#26374a) |
+| ⚠️ **Warning** | `styles/theme.css:42` | Custom link color `#1a73e8` | Replace with GC Design System token `--gc-color-link` (#284162) |
 | ⚠️ **Warning** | `src/Alert.tsx` | Custom Alert component | Consider using GC Design System Alert pattern |
 | ✅ **Pass** | `src/Header.tsx` | GC Signature correctly placed | None |
 
@@ -371,7 +467,12 @@ Generate a structured compliance report.
 ### References
 
 - [Federal Identity Program Manual](https://www.canada.ca/en/treasury-board-secretariat/services/government-communications/federal-identity-program/manual.html)
+- [Canada.ca Mandatory Elements](https://design.canada.ca/specifications/mandatory-elements.html)
 - [GC Design System](https://design.canada.ca/)
+- [Typography Spec](https://design.canada.ca/styles/typography.html)
+- [Colour Spec](https://design.canada.ca/styles/colours.html)
+- [Global Header](https://design.canada.ca/common-design-patterns/global-header.html)
+- [Global Footer](https://design.canada.ca/common-design-patterns/site-footer.html)
 - [Canada.ca Content Style Guide](https://www.canada.ca/en/treasury-board-secretariat/services/government-communications/canada-content-style-guide.html)
 ```
 
@@ -383,26 +484,51 @@ Generate a structured compliance report.
 | ⚠️ | **Warning** | Deviation from GC Design System | Should fix, may affect UX consistency |
 | ✅ | **Pass** | Compliant with standards | No action needed |
 
+## Reference: Page Type Variations
+
+Requirements vary by page type. When reviewing, consider which type applies:
+
+| Element | Standard Pages | Transactional Pages | Campaign Pages |
+|---------|---------------|---------------------|----------------|
+| GC Signature | Mandatory | Mandatory | Mandatory |
+| Language Toggle | Mandatory | Mandatory (omit only if data loss) | Mandatory |
+| Site Search Box | Mandatory | Optional | Mandatory |
+| Theme/Topic Menu | Mandatory | Optional | Optional |
+| Breadcrumb | Mandatory | Optional | Mandatory |
+| Main Footer Band | Mandatory | Optional | Optional |
+| Sub-footer Band | Mandatory | Mandatory | Mandatory |
+| Canada Wordmark | Mandatory | Mandatory | Mandatory |
+
 ## Reference: Quick Compliance Checklist
 
 Use this checklist for rapid verification:
 
 ### Header Requirements
-- [ ] Government of Canada Signature (top-left)
+- [ ] Government of Canada Signature (top-left, linked to Canada.ca home)
 - [ ] Language toggle (EN/FR)
-- [ ] Search functionality (or link to search)
+- [ ] Site search box (standard pages)
+- [ ] Breadcrumb trail starting with "Canada.ca" (standard pages)
+- [ ] White background
+- [ ] Divider line
 
-### Footer Requirements
+### Sub-footer Requirements (all page types)
 - [ ] Canada Wordmark (bottom-right)
 - [ ] Privacy link
 - [ ] Terms and Conditions link
-- [ ] Contact link
+
+### Main Footer Band (standard pages)
+- [ ] All contacts link
+- [ ] Departments and agencies link
+- [ ] About government link
 
 ### Design Requirements
-- [ ] Noto Sans font (or approved fallbacks)
+- [ ] Lato font for headings (bold)
+- [ ] Noto Sans font for body text
 - [ ] GC Design System color tokens
+- [ ] H1 red bar accent (#A62A1E, 72px x 6px)
 - [ ] Standard GC components (not custom)
 - [ ] Date Modified in YYYY-MM-DD format
+- [ ] Text line length ≤ 65 characters
 
 ## Your Character
 
