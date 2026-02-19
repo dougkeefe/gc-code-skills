@@ -6,11 +6,13 @@ A collection of Claude Code skills that help developers review code for complian
 
 ---
 
-## Disclaimer / Avis de non-responsabilité
+## Disclaimer / <span lang="fr">Avis de non-responsabilité</span>
 
 This project is not affiliated with, endorsed by, or sponsored by the Government of Canada. The information provided is sourced from publicly available Government of Canada policies and standards and is provided for educational and informational purposes only. This tool does not replace formal Security Assessment and Authorization (SA&A) processes.
 
+<div lang="fr">
 Ce projet n'est pas affilié, endossé ou parrainé par le gouvernement du Canada. Les informations fournies proviennent de politiques et de normes du gouvernement du Canada accessibles au public et sont fournies à des fins éducatives et informatives uniquement. Cet outil ne remplace pas les processus formels d'évaluation et d'autorisation de sécurité (EAS).
+</div>
 
 ---
 
@@ -56,11 +58,11 @@ Invoke a skill during a Claude Code session:
 
 ---
 
-## Official Languages / Langues officielles
+## Official Languages / <span lang="fr">Langues officielles</span>
 
 Contributions in English and French are welcome.
 
-Les contributions en anglais et en français sont les bienvenues.
+<span lang="fr">Les contributions en anglais et en français sont les bienvenues.</span>
 
 ---
 
