@@ -19,7 +19,7 @@ Ce projet n'est pas affilié, endossé ou parrainé par le gouvernement du Canad
 ## Available Skills
 
 ### `gc-review-a11y`
-Reviews code for WCAG 2.1 Level AA compliance. Checks semantic HTML, ARIA patterns, focus management, text alternatives, and visual integrity following the Standard on Web Accessibility.
+Reviews code for WCAG 2.2 Level AA compliance. Checks semantic HTML, ARIA patterns, focus management, text alternatives, and visual integrity following CAN/ASC - EN 301 549:2024.
 
 ### `gc-review-security`
 Reviews code for Protected B security compliance. Evaluates access control, input validation, encryption, secrets management, and logging against ITSG-33 controls.
@@ -28,10 +28,10 @@ Reviews code for Protected B security compliance. Evaluates access control, inpu
 Reviews database schemas and data access code for information management compliance. Checks mandatory metadata fields, retention policies, soft deletes, and audit requirements per the Directive on Service and Digital.
 
 ### `gc-review-iam`
-Reviews authentication implementations for GoC identity standards. Checks OIDC configuration, session security, scope minimization, and RBAC integration against TBS security guidelines.
+Reviews authentication implementations for GoC identity standards. Checks OIDC configuration, session security, scope minimization, and RBAC integration against the Directive on Identity Management and Standard on Identity and Credential Assurance.
 
 ### `gc-review-branding`
-Reviews code for Federal Identity Program compliance. Verifies GC signatures, Canada wordmark usage, typography, color tokens, and mandatory footer elements.
+Reviews code for Federal Identity Program compliance. Verifies GC signatures, Canada wordmark usage, typography, color tokens, and mandatory footer elements per the Policy on Communications and Federal Identity.
 
 ### `gc-review-bilingual`
 Reviews code for Official Languages Act compliance. Checks for hardcoded strings, translation file parity, locale-aware routing, and equal prominence of English and French content.
@@ -55,6 +55,60 @@ Invoke a skill during a Claude Code session:
 /gc-review-security
 /gc-review-branding
 ```
+
+---
+
+## Configuration
+
+Some skills support project-level configuration via `.gc-review/config.json`. This lets you tailor reviews to your project's specific requirements.
+
+```bash
+mkdir -p .gc-review
+cat > .gc-review/config.json << 'EOF'
+{
+  "version": 1
+}
+EOF
+```
+
+### Supported configuration by skill
+
+#### `gc-review-iam`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `additionalIdPs` | `array` | Additional approved identity providers beyond the defaults (Entra ID, GCKey, Sign-In Canada). Each entry has `name` and `issuer` fields. |
+
+```json
+{
+  "additionalIdPs": [
+    { "name": "Departmental ADFS", "issuer": "adfs.department.gc.ca" }
+  ]
+}
+```
+
+#### `gc-review-im`
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `requiredMetadata` | `string[]` | `["record_id", "creator_id", "date_created", "language", "classification"]` | Metadata fields required on business record models |
+| `softDeleteFields` | `string[]` | `["deleted_at", "is_deleted", "archived_at"]` | Field names that indicate soft delete support |
+| `retentionFields` | `string[]` | `["retention_schedule", "disposition_date", "retention_code", "retention_period"]` | Field names indicating retention/disposition support |
+| `exclude` | `string[]` | `[]` | Glob patterns for files to exclude |
+| `strictMode` | `boolean` | `false` | When true, warnings are treated as errors |
+
+See [`skills/gc-review-im/CONFIG.md`](skills/gc-review-im/CONFIG.md) for the full schema.
+
+#### `gc-review-branding`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `department` | `string` | Department name for reporting |
+| `signature.altText` | `string` | Expected alt text for GC signature |
+| `signature.componentName` | `string` | Custom component name for GC signature |
+| `wordmark.componentName` | `string` | Custom component name for Canada wordmark |
+| `additionalColors` | `object` | Extra approved color tokens (map of token name to hex value) |
+| `excludePatterns` | `string[]` | File patterns to skip |
 
 ---
 

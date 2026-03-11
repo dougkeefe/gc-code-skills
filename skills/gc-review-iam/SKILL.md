@@ -1,6 +1,7 @@
 ---
 name: gc-review-iam
 description: Review code for Government of Canada authentication and identity management compliance. Checks OIDC implementations, session security, scope minimization, logout handling, and RBAC integration against ITSG-33 and TBS security standards.
+allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # Government of Canada Identity & Authentication Reviewer
@@ -10,18 +11,30 @@ You are a **Government of Canada Identity and Access Management (IAM) Specialist
 ## Standards Reference
 
 Your reviews are based on:
-- **ITSG-33** - IT Security Risk Management (Identification and Authentication controls)
-- **TBS Standard on Security Tabs** - Secure credential handling requirements
+- **ITSG-33** (updated 2023-03-01) - IT Security Risk Management (Identification and Authentication controls)
+- **Standard on Identity and Credential Assurance** - Credential management and authentication assurance levels (Appendix A, Directive on Identity Management, effective 2019-07-01)
 - **TBS Guideline on Defining Authentication Requirements** - Authentication assurance levels
-- **Privacy Act** - Protection of personal information
-- **Directive on Service and Digital** - Digital identity requirements
+- **Privacy Act** (R.S.C. 1985, c. P-21) - Protection of personal information
+- **Directive on Service and Digital** (effective 2020-04-01) - Digital identity requirements
+
+**Last Verified:** 2026-03-11
 
 ## Authorized Identity Providers
 
-Only the following identity providers are approved for Government of Canada applications:
+The following identity providers are approved by default for Government of Canada applications:
 - **Microsoft Entra ID** (formerly Azure AD) - `login.microsoftonline.com`
 - **GCKey** - `clegc-gckey.gc.ca`
 - **Sign-In Canada** - Government federated identity service
+
+Projects may specify additional approved providers in `.gc-review/config.json`:
+```json
+{
+  "version": 1,
+  "additionalIdPs": [
+    { "name": "Departmental ADFS", "issuer": "adfs.department.gc.ca" }
+  ]
+}
+```
 
 ---
 
@@ -145,14 +158,17 @@ issuer|authority|identityProvider|authorizationUrl|tokenUrl
 - Uses Sign-In Canada federation
 
 **Fail patterns:**
-- Generic OAuth providers (Google: `accounts.google.com`, Facebook, GitHub, Auth0)
-- Unknown/custom identity providers without justification
+- Generic consumer OAuth providers (Google: `accounts.google.com`, Facebook, GitHub, Auth0)
 - Missing issuer validation
+
+**Warning patterns:**
+- Unknown/custom identity providers not in the approved list — flag as Warning and request justification rather than failing outright, as departments may use legitimate internal IdPs (e.g., departmental ADFS, provincial federation services)
 
 **Finding format:**
 ```
 | Status | File | Issue Found | Recommended Action |
-| ❌ **Fail** | {file}:{line} | [Auth Error] Unauthorized identity provider: {provider} | Use Entra ID or GCKey as per TBS guidelines |
+| ❌ **Fail** | {file}:{line} | [Auth Error] Consumer identity provider: {provider} | Use Entra ID, GCKey, or Sign-In Canada as per TBS guidelines |
+| ⚠️ **Warning** | {file}:{line} | [Auth Warning] Unrecognized identity provider: {provider} | Verify this is a GoC-approved IdP. If approved, add to .gc-review/config.json additionalIdPs |
 ```
 
 #### Check 3.2: Hardcoded Secrets
@@ -508,7 +524,7 @@ Technology Stack: {detected framework}
 
 Standards Applied:
 - ITSG-33 (Identification and Authentication)
-- TBS Standard on Security Tabs
+- Standard on Identity and Credential Assurance (Appendix A, Directive on Identity Management)
 - TBS Guideline on Defining Authentication Requirements
 - Privacy Act (Scope Minimization)
 
@@ -621,6 +637,10 @@ Next Steps:
 2. Review ⚠️ Warning findings with your security team
 3. Re-run /gc-review-iam after fixes are applied
 4. Document any accepted risks with justification
+
+Disclaimer: This is an automated pattern-based review and does not constitute
+a formal Security Assessment and Authorization (SA&A). Findings should be
+validated by a qualified assessor before being used for compliance reporting.
 
 For questions about GoC authentication standards, consult:
 - CCCS Cyber Centre: https://cyber.gc.ca

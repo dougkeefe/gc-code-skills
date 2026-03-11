@@ -4,7 +4,7 @@ This document describes the configuration options for the `gc-review-branding` s
 
 ## Configuration File
 
-Create `.gc-branding/config.json` in your project root to customize the review behavior.
+Create `.gc-review/config.json` in your project root to customize the review behavior.
 
 ## Full Schema
 
@@ -131,7 +131,7 @@ Invalid configs produce a warning and fall back to defaults.
 
 The config file must be at:
 ```
-.gc-branding/config.json
+.gc-review/config.json
 ```
 
 This keeps branding configuration separate from other project configs and allows easy exclusion from version control if needed.

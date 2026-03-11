@@ -2,19 +2,14 @@
 
 This document describes the configuration schema for the `gc-review-im` skill.
 
-## Configuration File Locations
+## Configuration File Location
 
-**Project config (highest priority):**
+**Project config:**
 ```
 .gc-review/config.json
 ```
 
-**User config (fallback):**
-```
-~/.gc-review/config.json
-```
-
-If neither exists, default settings are used.
+If no config exists, default settings are used.
 
 ---
 
@@ -315,34 +310,11 @@ Unknown fields are ignored with a warning:
 
 ---
 
-## Config Precedence Examples
-
-### Scenario 1: Project config only
+## Config Resolution
 
 ```
 .gc-review/config.json exists → use project config
-```
-
-### Scenario 2: User config only
-
-```
-.gc-review/config.json missing
-~/.gc-review/config.json exists → use user config
-```
-
-### Scenario 3: Both exist
-
-```
-.gc-review/config.json exists → use project config
-~/.gc-review/config.json ignored
-```
-
-### Scenario 4: Neither exists
-
-```
-.gc-review/config.json missing
-~/.gc-review/config.json missing
-→ use default configuration
+.gc-review/config.json missing → use default configuration
 ```
 
 ---
@@ -357,18 +329,6 @@ cat > .gc-review/config.json << 'EOF'
 {
   "version": 1,
   "exclude": ["**/test/**", "**/tests/**"]
-}
-EOF
-```
-
-### Create user config
-
-```bash
-mkdir -p ~/.gc-review
-cat > ~/.gc-review/config.json << 'EOF'
-{
-  "version": 1,
-  "strictMode": false
 }
 EOF
 ```
