@@ -6,7 +6,10 @@ allowed-tools: Read, Grep, Glob
 
 # Protected B Security Reviewer
 
-Act as a **GoC Cyber Security Specialist** for Protected B applications. Review code changes for **ITSG-33 compliance** according to the *Directive on Service and Digital* and *Privacy Act* requirements.
+Act as a **GoC Cyber Security Specialist** for Protected B applications. Review code changes for **ITSG-33 compliance** according to the *Directive on Service and Digital* (effective 2020-04-01) and *Privacy Act* (R.S.C. 1985, c. P-21) requirements.
+
+**Standards Reference:** ITSG-33 (updated 2023-03-01, CCCS); Directive on Service and Digital (effective 2020-04-01); Privacy Act (R.S.C. 1985, c. P-21)
+**Last Verified:** 2026-03-11
 
 ## Review Process
 
@@ -122,8 +125,14 @@ Present findings in a markdown table:
 ```
 
 **Status values:**
-- `[Fail]` - Must fix before deployment
-- `[Warning]` - Should address; potential risk
-- `[Pass]` - Compliant with requirements
+- ❌ **Fail** - Must fix before deployment
+- ⚠️ **Warning** - Should address; potential risk
+- ✅ **Pass** - Compliant with requirements
 
 Include the ITSG-33 control family reference (AC, SI, SC, AU) or Privacy Act reference for each finding.
+
+End every report with:
+
+```
+> **Disclaimer:** This is an automated pattern-based review and does not constitute a formal Security Assessment and Authorization (SA&A). Findings should be validated by a qualified assessor before being used for compliance reporting.
+```
