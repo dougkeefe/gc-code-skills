@@ -14,7 +14,7 @@ Installation: `npx skills add dougkeefe/gc-code-skills`
 - `skills/gc-review-*/CONFIG.md` — Configuration schema docs (gc-review-im, gc-review-branding)
 - `.claude-plugin/` — Plugin metadata for Claude Code marketplace
 
-Six skills exist: `gc-review-a11y`, `gc-review-security`, `gc-review-im`, `gc-review-iam`, `gc-review-branding`, `gc-review-bilingual`.
+Seven skills exist: `gc-review-a11y`, `gc-review-security`, `gc-review-im`, `gc-review-iam`, `gc-review-branding`, `gc-review-bilingual`, `gc-review-all`.
 
 ## Skill File Format
 
@@ -24,7 +24,7 @@ Each SKILL.md follows this structure:
 ---
 name: gc-review-[domain]
 description: [What the skill reviews]
-allowed-tools: [Comma-separated list: Read, Grep, Glob, Bash, Edit, AskUserQuestion]
+allowed-tools: [Comma-separated list: Read, Grep, Glob, Bash, Edit, Write, Agent, AskUserQuestion]
 ---
 ```
 
@@ -43,6 +43,7 @@ Followed by markdown containing:
 - **Configuration path**: Skills that support project-level config read from `.gc-review/config.json`. The config uses `"version": 1` as a required field.
 - **allowed-tools must list every tool the skill uses**, including AskUserQuestion if the workflow calls it.
 - **Severity levels**: ❌ Fail (must fix), ⚠️ Warning (should address), ✅ Pass (compliant).
+- **Agent tool for orchestration**: `gc-review-all` uses the `Agent` tool to spawn sub-agents for each domain skill. Individual domain skills do not use `Agent`.
 - **Bilingual**: README sections include French translations. Contributions in both English and French are welcome.
 
 ## No Build/Test/Lint

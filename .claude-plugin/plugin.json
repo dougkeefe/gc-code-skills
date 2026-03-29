@@ -1,6 +1,6 @@
 {
   "name": "gc-code-skills",
-  "description": "Claude Code skills for Government of Canada digital standards compliance reviews — accessibility, security, information management, identity & authentication, branding, and bilingual support.",
+  "description": "Claude Code skills for Government of Canada digital standards compliance reviews — accessibility, security, information management, identity & authentication, branding, bilingual support, and consolidated audit reports.",
   "version": "1.0.0",
   "author": {
     "name": "Doug Keefe",
@@ -17,6 +17,7 @@
     "wcag",
     "bilingual",
     "code-review",
+    "audit",
     "branding",
     "information-management",
     "identity-authentication"
