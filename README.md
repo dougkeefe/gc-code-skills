@@ -78,6 +78,15 @@ Vérifie la conformité du code à la Loi sur les langues officielles. Contrôle
 
 </div>
 
+### `gc-review-all`
+Runs all six GC compliance review skills and produces a consolidated audit report with a prioritized remediation plan covering accessibility, security, information management, identity & authentication, branding, and bilingual compliance.
+
+<div lang="fr">
+
+Lance les six compétences de revue de conformité du GC et produit un rapport d'audit consolidé avec un plan de remédiation priorisé couvrant l'accessibilité, la sécurité, la gestion de l'information, l'identité et l'authentification, l'image de marque et la conformité bilingue.
+
+</div>
+
 ---
 
 ## Installation
@@ -108,6 +117,7 @@ Invoquez une compétence pendant une session Claude Code :
 /gc-review-a11y
 /gc-review-security
 /gc-review-branding
+/gc-review-all          # full audit across all domains
 ```
 
 ---
