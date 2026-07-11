@@ -70,11 +70,11 @@ Vérifie la conformité du code au Programme de coordination de l'image de marqu
 </div>
 
 ### `gc-review-bilingual`
-Reviews code for Official Languages Act compliance. Checks for hardcoded strings, translation file parity, locale-aware routing, and equal prominence of English and French content.
+Reviews code for Official Languages Act compliance. Checks for hardcoded strings, translation file parity, locale-aware routing and formatting, active offer and language-toggle wording, and equal prominence of English and French content.
 
 <div lang="fr">
 
-Vérifie la conformité du code à la Loi sur les langues officielles. Contrôle les chaînes codées en dur, la parité des fichiers de traduction, le routage selon la langue et la proéminence égale du contenu en anglais et en français.
+Vérifie la conformité du code à la Loi sur les langues officielles. Contrôle les chaînes codées en dur, la parité des fichiers de traduction, le routage et le formatage selon la langue, l'offre active et le libellé du sélecteur de langue, ainsi que la proéminence égale du contenu en anglais et en français.
 
 </div>
 
@@ -179,6 +179,53 @@ See [`skills/gc-review-im/CONFIG.md`](skills/gc-review-im/CONFIG.md) for the ful
 | `wordmark.componentName` | `string` | Custom component name for Canada wordmark |
 | `additionalColors` | `object` | Extra approved color tokens (map of token name to hex value) |
 | `excludePatterns` | `string[]` | File patterns to skip |
+
+#### `gc-review-bilingual`
+
+Options are nested under the `"bilingual"` key in `.gc-review/config.json`:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `translationFiles` | `object` | auto-detected | Glob patterns for translation files, with `english` and `french` arrays |
+| `scanPaths` | `string[]` | framework-based | Glob patterns for UI source files to scan |
+| `excludePaths` | `string[]` | tests, `node_modules` | Glob patterns for files to exclude |
+| `framework` | `string` | `"auto"` | i18n framework (`next-intl`, `react-i18next`, `vue-i18n`, `angular`, `svelte-i18n`, or `auto`) |
+| `minStringLength` | `number` | `3` | Minimum string length to flag as hardcoded |
+| `identicalThreshold` | `number` | `20` | Minimum length of identical EN/FR strings to flag |
+| `ignoreWords` | `string[]` | technical terms | Words never flagged (proper nouns, technical terms) |
+| `strictMode` | `boolean` | `false` | When true, warnings are treated as failures |
+
+```json
+{
+  "version": 1,
+  "bilingual": {
+    "translationFiles": { "english": ["messages/en.json"], "french": ["messages/fr.json"] },
+    "scanPaths": ["src/**/*.tsx"],
+    "identicalThreshold": 20
+  }
+}
+```
+
+The legacy `.bilingual-review.json` file remains a deprecated fallback for one release.
+
+<div lang="fr">
+
+Les options sont imbriquées sous la clé `"bilingual"` dans `.gc-review/config.json` :
+
+| Champ | Type | Défaut | Description |
+|-------|------|--------|-------------|
+| `translationFiles` | `object` | détection automatique | Motifs glob des fichiers de traduction, avec les tableaux `english` et `french` |
+| `scanPaths` | `string[]` | selon le cadriciel | Motifs glob des fichiers source d'interface à analyser |
+| `excludePaths` | `string[]` | tests, `node_modules` | Motifs glob des fichiers à exclure |
+| `framework` | `string` | `"auto"` | Cadriciel d'i18n (`next-intl`, `react-i18next`, `vue-i18n`, `angular`, `svelte-i18n` ou `auto`) |
+| `minStringLength` | `number` | `3` | Longueur minimale d'une chaîne signalée comme codée en dur |
+| `identicalThreshold` | `number` | `20` | Longueur minimale des chaînes EN/FR identiques à signaler |
+| `ignoreWords` | `string[]` | termes techniques | Mots jamais signalés (noms propres, termes techniques) |
+| `strictMode` | `boolean` | `false` | Si vrai, les avertissements sont traités comme des échecs |
+
+Le fichier hérité `.bilingual-review.json` demeure une solution de repli dépréciée pour une version.
+
+</div>
 
 ---
 
