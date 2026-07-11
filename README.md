@@ -34,11 +34,11 @@ Vérifie le code selon le niveau AA des WCAG 2.2 comme référence, dépassant l
 </div>
 
 ### `gc-review-security`
-Reviews code for Protected B security compliance. Evaluates access control, input validation, encryption, secrets management, and logging against ITSG-33 controls.
+Reviews code for Protected B security compliance. Evaluates access control, input validation, PII handling, cryptography (per CCCS ITSP.40.111 v5, including post-quantum milestones), security headers, secrets management, and audit logging against ITSG-33 controls and GC web configuration requirements.
 
 <div lang="fr">
 
-Vérifie la conformité du code aux exigences de sécurité Protégé B. Évalue le contrôle d'accès, la validation des entrées, le chiffrement, la gestion des secrets et la journalisation selon les contrôles ITSG-33.
+Vérifie la conformité du code aux exigences de sécurité Protégé B. Évalue le contrôle d'accès, la validation des entrées, le traitement des renseignements personnels, la cryptographie (selon l'ITSP.40.111 v5 du CCC, y compris les jalons post-quantiques), les en-têtes de sécurité, la gestion des secrets et la journalisation d'audit selon les contrôles ITSG-33 et les exigences de configuration Web du GC.
 
 </div>
 
@@ -167,6 +167,29 @@ Options live under the `"a11y"` namespace in `.gc-review/config.json`.
 ```
 
 See [`skills/gc-review-a11y/CONFIG.md`](skills/gc-review-a11y/CONFIG.md) for the full schema.
+
+#### `gc-review-security`
+
+Options are namespaced under a `"security"` key:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `security.piiMetadataConvention` | `string[]` | unset | Annotation names the project uses to mark PII fields (e.g., `isPII`, `@Sensitive`). If unset, missing PII metadata is a warning instead of a failure. |
+| `security.auditLogService` | `string` | unset | Identifier of the sanctioned audit logging service. If unset, console logging of security events is a warning, not a failure. |
+| `security.approvedAlgorithmExceptions` | `string[]` | `[]` | Algorithms with a documented, assessor-approved exception; findings are downgraded to warnings. |
+| `security.strictMode` | `boolean` | `false` | When true, warnings are treated as failures. |
+
+```json
+{
+  "version": 1,
+  "security": {
+    "piiMetadataConvention": ["isPII"],
+    "auditLogService": "auditLog"
+  }
+}
+```
+
+See [`skills/gc-review-security/CONFIG.md`](skills/gc-review-security/CONFIG.md) for the full schema.
 
 #### `gc-review-iam`
 
