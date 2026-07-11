@@ -61,11 +61,11 @@ Vérifie les implémentations d'authentification selon les normes d'identité du
 </div>
 
 ### `gc-review-branding`
-Reviews code for Federal Identity Program compliance. Verifies GC signatures, Canada wordmark usage, typography, color tokens, and mandatory footer elements per the Policy on Communications and Federal Identity.
+Reviews code for Federal Identity Program compliance. Verifies GC signatures, Canada wordmark usage, typography, color tokens, and mandatory header/footer elements per the Policy on Communications and Federal Identity, and recognizes official GC Design System (GCDS) components as compliant.
 
 <div lang="fr">
 
-Vérifie la conformité du code au Programme de coordination de l'image de marque. Contrôle les signatures du GC, l'utilisation du mot-symbole « Canada », la typographie, les jetons de couleur et les éléments obligatoires du pied de page selon la Politique sur les communications et l'image de marque.
+Vérifie la conformité du code au Programme de coordination de l'image de marque. Contrôle les signatures du GC, l'utilisation du mot-symbole « Canada », la typographie, les jetons de couleur et les éléments obligatoires de l'en-tête et du pied de page selon la Politique sur les communications et l'image de marque, et reconnaît les composants officiels du Système de design GC (GCDS) comme conformes.
 
 </div>
 
@@ -171,14 +171,31 @@ See [`skills/gc-review-im/CONFIG.md`](skills/gc-review-im/CONFIG.md) for the ful
 
 #### `gc-review-branding`
 
+All options live under the `"branding"` key. / <span lang="fr">Toutes les options se trouvent sous la clé `"branding"`.</span>
+
 | Field | Type | Description |
 |-------|------|-------------|
-| `department` | `string` | Department name for reporting |
-| `signature.altText` | `string` | Expected alt text for GC signature |
-| `signature.componentName` | `string` | Custom component name for GC signature |
-| `wordmark.componentName` | `string` | Custom component name for Canada wordmark |
-| `additionalColors` | `object` | Extra approved color tokens (map of token name to hex value) |
-| `excludePatterns` | `string[]` | File patterns to skip |
+| `branding.department` | `string` | Department name for reporting |
+| `branding.signature.altText` | `string` | Expected alt text for GC signature |
+| `branding.signature.componentName` | `string` | Custom component name for GC signature |
+| `branding.wordmark.componentName` | `string` | Custom component name for Canada wordmark |
+| `branding.additionalColors` | `object` | Extra approved color tokens (map of token name to hex value) |
+| `branding.additionalFonts` | `string[]` | Extra approved font families / <span lang="fr">Familles de polices supplémentaires approuvées</span> |
+| `branding.exclude` | `string[]` | Glob patterns for files to skip |
+| `branding.strictMode` | `boolean` | Treat warnings as failures / <span lang="fr">Traiter les avertissements comme des échecs</span> |
+
+```json
+{
+  "version": 1,
+  "branding": {
+    "department": "Parks Canada",
+    "additionalFonts": ["Montserrat"],
+    "strictMode": false
+  }
+}
+```
+
+See [`skills/gc-review-branding/CONFIG.md`](skills/gc-review-branding/CONFIG.md) for the full schema.
 
 ---
 
