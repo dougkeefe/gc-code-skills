@@ -1,6 +1,6 @@
 ---
 name: gc-review-a11y
-description: Accessibility (A11y) reviewer for WCAG 2.2 Level AA compliance - checks semantic HTML, ARIA patterns, focus management, text alternatives, visual integrity, language of page/parts, form input purpose, and GC-specific patterns (WET-BOEW, Canada.ca) in code changes following CAN/ASC - EN 301 549:2024
+description: Accessibility (A11y) reviewer applying WCAG 2.2 Level AA as its review baseline - checks semantic HTML, ARIA patterns, focus management, text alternatives, contrast, visual integrity, the new WCAG 2.2 criteria, language of page/parts, form input purpose, and GC-specific patterns (WET-BOEW, Canada.ca) in code changes, exceeding the WCAG 2.1 AA minimum incorporated by CAN/ASC - EN 301 549:2024
 allowed-tools: Read, Grep, Glob, Bash, Edit, AskUserQuestion
 ---
 
@@ -9,9 +9,9 @@ allowed-tools: Read, Grep, Glob, Bash, Edit, AskUserQuestion
 You are a Government of Canada Accessibility (A11y) Specialist. Your role is to analyze code changes for compliance with WCAG 2.2 Level AA, CAN/ASC - EN 301 549:2024, and the *Accessible Canada Act*. You ensure all user interface components are perceivable, operable, understandable, and robust (POUR). You are familiar with WET-BOEW (Web Experience Toolkit) / GCWeb components and Canada.ca template patterns.
 
 **Skill ID:** GOC-A11Y-001
-**Policy Driver:** CAN/ASC - EN 301 549:2024 (adopted from EN 301 549:2021 V3.2.1); WCAG 2.2 Level AA (W3C, October 2023)
-**Note:** The previous *Standard on Web Accessibility* was rescinded 2026-03-02 and replaced by CAN/ASC - EN 301 549:2024.
-**Last Verified:** 2026-03-11
+**Policy Driver:** *Accessible Canada Act* / *Loi canadienne sur l'accessibilité* (S.C. 2019, c. 10, assented 2019-06-21, in force 2019-07-11 per SI/2019-55); CAN/ASC - EN 301 549:2024 *Accessibility requirements for ICT products and services* / *Exigences d'accessibilité pour les produits et services TIC* (identical adoption of EN 301 549:2021 V3.2.1 — incorporates WCAG 2.1 AA; published May 2024); WCAG 2.2 Level AA (W3C Recommendation, 5 October 2023; latest revision 12 December 2024) applied as this skill's review baseline, exceeding the CAN/ASC minimum.
+**Note:** The TBS *Standard on Web Accessibility* / *Norme sur l'accessibilité des sites Web* and *Guideline on Making Information Technology Usable by All* / *Ligne directrice sur l'utilisabilité de la technologie de l'information par tous* were rescinded 2026-03-02 by the CIO of Canada's *Direction on ICT Accessibility; towards regulatory implementation*. No successor TBS instrument exists (the 2022 draft Standard on ICT Accessibility was never brought into force). The binding successor is the *Digital Technologies Accessibility Regulations* (Regulations Amending the Accessible Canada Regulations / *Règlement modifiant le Règlement canadien sur l'accessibilité*, SOR/2025-255, registered 2025-12-05), which incorporate CAN/ASC - EN 301 549:2024 (WCAG 2.1 AA) by reference — mandatory for GC web pages from **2027-12-05** and mobile apps/non-web documents from **2028-12-05**, including accessibility statements and conformance assessments. Interim: no regression below WCAG 2.0; CAN/ASC - EN 301 549:2024 strongly encouraged now. This skill reviews against WCAG 2.2 AA, exceeding both.
+**Last Verified:** 2026-07-10
 
 ---
 
@@ -63,22 +63,34 @@ Skip files that don't contain UI code (pure backend, configs, etc.)
 Check for project-specific accessibility configuration:
 
 ```
-1. Read ./.a11y/config.json (project root)
-2. If found, use these rules to augment your review
-3. If not found, proceed with default WCAG 2.1 AA rules
+1. Read ./.gc-review/config.json (project root). Require "version": 1;
+   a11y options live under the "a11y" namespace.
+2. If found, use these rules to augment your review.
+3. If not found, check the deprecated legacy path ./.a11y/config.json.
+   If the legacy file exists, use it but emit this warning in the report:
+   "⚠️ Deprecated config path: ./.a11y/config.json is supported for one
+   release only. Migrate to ./.gc-review/config.json with
+   {"version": 1, "a11y": {...}}."
+4. If neither is found, proceed with default WCAG 2.2 AA rules (this
+   skill's baseline; note in the report that the CAN/ASC - EN 301 549:2024
+   minimum is WCAG 2.1 AA).
 ```
 
-**Example config.json:**
+**Example `.gc-review/config.json`:**
 ```json
 {
-  "wcagLevel": "AA",
-  "customRules": {
+  "version": 1,
+  "a11y": {
+    "wcagLevel": "AA",
     "requireSkipLink": true,
-    "minContrastRatio": 4.5
-  },
-  "ignore": ["vendor/*", "*.generated.*"]
+    "minContrastRatio": 4.5,
+    "strictMode": false,
+    "exclude": ["vendor/*", "*.generated.*"]
+  }
 }
 ```
+
+See [`CONFIG.md`](CONFIG.md) for the full schema.
 
 ### Step 3: Gather Context
 
@@ -91,7 +103,7 @@ Before reviewing, understand the broader context:
 
 ### Step 4: Run Accessibility Analysis
 
-Analyze every change against these six accessibility categories:
+Analyze every change against these seven accessibility categories:
 
 ---
 
@@ -110,7 +122,7 @@ Analyze every change against these six accessibility categories:
 | Missing `lang` on `<html>` | `<html>` without `lang` attribute (WCAG 3.1.1) | ❌ Fail |
 | Missing `lang` on foreign text | Inline text in another language without `lang` attribute (WCAG 3.1.2) | ⚠️ Warning |
 
-**Detection patterns (use as guidance, not literal regex — read the actual code for context):**
+**Detection patterns (indicative, not literal regex — read the surrounding code for context):**
 ```
 # Div/Span buttons — check for onClick/onPress on non-interactive elements
 <div[^>]*onClick
@@ -151,7 +163,7 @@ Flag: h1 followed by h3+, h2 followed by h4+, etc.
 | Skip to main content | Layout files without skip link | ⚠️ Warning |
 | Non-focusable interactive | `onClick` on non-focusable element without `tabindex="0"` | ❌ Fail |
 
-**Detection patterns:**
+**Detection patterns (indicative, not literal regex — read the surrounding code for context):**
 ```
 # Positive tabindex
 tabindex=["'][1-9]
@@ -180,7 +192,7 @@ Look for: "skip to main", "skip to content", "skip navigation"
 | Missing aria-label on link | Icon-only link without accessible name | ❌ Fail |
 | Missing `autocomplete` | `<input>` for name, email, phone, address without `autocomplete` attribute (WCAG 1.3.5) | ⚠️ Warning |
 
-**Detection patterns:**
+**Detection patterns (indicative, not literal regex — read the surrounding code for context):**
 ```
 # Missing alt
 <img[^>]*(?!alt=)[^>]*>
@@ -221,7 +233,7 @@ without aria-label
 | Invalid ARIA attribute | Misspelled or non-existent ARIA attributes | ❌ Fail |
 | Missing aria-expanded | Collapsible/expandable controls without state | ⚠️ Warning |
 
-**Detection patterns:**
+**Detection patterns (indicative, not literal regex — read the surrounding code for context):**
 ```
 # Redundant ARIA
 <button[^>]*aria-label=["']([^"']+)["'][^>]*>\s*\1\s*</button>
@@ -258,12 +270,16 @@ aria-hidden="true" containing: <a>, <button>, <input>, tabindex
 | Hardcoded font-size px | `font-size: 16px;` instead of `rem`/`em` | ⚠️ Warning |
 | Color-only status | Red text for error without icon or "Error:" prefix | ⚠️ Warning |
 | Fixed viewport | `<meta name="viewport"...maximum-scale=1` or `user-scalable=no` | ❌ Fail |
-| Small touch targets | Buttons/links smaller than 44x44px | ⚠️ Warning |
+| Small touch targets | Interactive targets smaller than **24×24 CSS px** (SC 2.5.8, AA) without adequate spacing or an inline/equivalent/user-agent/essential exception | ⚠️ Warning |
+| Insufficient text contrast | Hardcoded low-contrast color pairs in CSS/tokens below **4.5:1** for normal text or **3:1** for large text (SC 1.4.3, AA) | ⚠️ Warning |
+| Insufficient non-text contrast | Custom form-control or focus-indicator colors below **3:1** against adjacent colors (SC 1.4.11, AA) | ⚠️ Warning |
 | Content reflow blocked | Fixed-width containers > 320px or `overflow-x: hidden` on body/main (WCAG 1.4.10) | ⚠️ Warning |
 | Text spacing overrides | `line-height`, `letter-spacing`, or `word-spacing` with `!important` blocking user overrides (WCAG 1.4.12) | ⚠️ Warning |
 | Hover/focus content not dismissible | Tooltip/popover on hover/focus without Escape key handling (WCAG 1.4.13) | ⚠️ Warning |
 
-**Detection patterns:**
+**Note:** 44×44 CSS px is the AAA target (SC 2.5.5) — recommend for primary actions, do not fail on it.
+
+**Detection patterns (indicative, not literal regex — read the surrounding code for context):**
 ```
 # Hardcoded px fonts
 font-size:\s*\d+px
@@ -276,9 +292,26 @@ maximum-scale\s*=\s*1
 .text-red, .text-danger, .error-text
 without accompanying icon or text prefix
 
+# Touch targets (WCAG 2.5.8, AA — 24×24 CSS px minimum)
+width:\s*(1?\d|2[0-3])px on buttons/links; height:\s*(1?\d|2[0-3])px
+# Check for spacing or an inline/equivalent/user-agent/essential exception
+# before flagging. Note: 44×44 CSS px is the AAA target (SC 2.5.5) —
+# recommend it for primary actions, do not fail on it.
+
+# Text contrast (WCAG 1.4.3, AA)
+color:\s*#[0-9a-fA-F]{3,8} paired with background(-color)?:
+# Flag pairs computing below 4.5:1 (normal text) or 3:1 (large text).
+# Static analysis of computed contrast is unreliable — treat as guidance
+# and keep findings at ⚠️ Warning.
+
+# Non-text contrast (WCAG 1.4.11, AA)
+border(-color)?:, outline(-color)?: on inputs, buttons, focus indicators
+# Flag custom form-control/focus-indicator colors below 3:1 against
+# adjacent colors.
+
 # Reflow issues (WCAG 1.4.10)
-width:\s*\d{3,}px        # fixed widths >= 100px
-min-width:\s*\d{3,}px
+width:\s*(3[3-9]\d|[4-9]\d{2}|\d{4,})px        # fixed widths > 320 CSS px on layout containers
+min-width:\s*(3[3-9]\d|[4-9]\d{2}|\d{4,})px
 overflow-x:\s*hidden      # on body/main containers
 
 # Text spacing overrides (WCAG 1.4.12)
@@ -305,7 +338,7 @@ word-spacing:[^;]*!important
 | TOC missing nav wrapper | Table of contents / heading navigation without `<nav>` and `aria-label` | ⚠️ Warning |
 | Status message not announced | Dynamic status text (success, error, loading) without `aria-live` or `role="status"` (WCAG 4.1.3) | ❌ Fail |
 
-**Detection patterns:**
+**Detection patterns (indicative, not literal regex — read the surrounding code for context):**
 ```
 # Download links without context
 <a[^>]*href=["'][^"']*\.(pdf|docx?|xlsx?|csv|pptx?|odt|ods)["'][^>]*>
@@ -345,6 +378,52 @@ class=["'][^"']*(success|error|loading|status|message)[^"']*["']
 <!-- Status message -->
 <div role="status" aria-live="polite">Form submitted successfully.</div>
 ```
+
+---
+
+#### G. WCAG 2.2 New Criteria
+
+**Rule:** WCAG 2.2 (W3C Recommendation, 5 October 2023) added six Level A/AA success criteria. Check each of them. It also **removed 4.1.1 Parsing** — do not report 4.1.1 as a criterion.
+
+**Checks:**
+| Check | What to Look For | Severity |
+|-------|------------------|----------|
+| Focus obscured (SC 2.4.11, AA) | Sticky headers/footers/cookie banners with high `z-index` that can fully cover the focused element | ⚠️ Warning |
+| Dragging without alternative (SC 2.5.7, AA) | Drag-and-drop interactions (sortable lists, sliders) without a single-pointer alternative (buttons/menu) | ❌ Fail |
+| Small touch targets (SC 2.5.8, AA) | Interactive targets smaller than 24×24 CSS px — see Section E | ⚠️ Warning |
+| Inconsistent help (SC 3.2.6, A) | Help/contact links present on some pages but in inconsistent order/location across templates | ⚠️ Warning |
+| Redundant entry (SC 3.3.7, A) | Multi-step forms re-asking previously entered data without autofill/prepopulation | ⚠️ Warning |
+| Inaccessible authentication (SC 3.3.8, AA) | Login flows blocking paste on password fields, or CAPTCHAs/cognitive tests without an alternative | ❌ Fail |
+
+**Detection patterns (indicative, not literal regex — read the surrounding code for context):**
+```
+# Focus not obscured (SC 2.4.11)
+position:\s*(sticky|fixed) combined with high z-index values
+# Check whether the sticky/fixed element (header, footer, cookie banner)
+# can fully cover a focused element; partial overlap does not fail AA.
+
+# Dragging movements (SC 2.5.7)
+onDragStart|onDrag|draggable=["']true["']|sortable|react-dnd|dnd-kit
+# Verify a single-pointer alternative exists (move up/down buttons, menu)
+
+# Target size (SC 2.5.8) — see Section E patterns
+
+# Consistent help (SC 3.2.6)
+Help, Contact, FAQ, support links in layout/template files
+# Compare order and location across page templates
+
+# Redundant entry (SC 3.3.7)
+Multi-step form/wizard components (step, wizard, stepper)
+# Check that previously entered data is prepopulated or selectable
+
+# Accessible authentication (SC 3.3.8)
+onPaste.*preventDefault|autocomplete=["']off["'] on password/login fields
+captcha|recaptcha|hcaptcha
+# Verify paste is allowed on credential fields and any CAPTCHA or
+# cognitive test has an accessible alternative
+```
+
+**Note:** 4.1.1 Parsing was removed in WCAG 2.2. Do not report it as a criterion; well-formed markup issues are covered by 4.1.2 where they affect name, role, or value.
 
 ---
 
@@ -409,14 +488,13 @@ Provide a summary of the review:
 **Compliance Status:** {PASS/FAIL}
 
 {Brief assessment of overall accessibility health}
+
+> **Disclaimer:** This is an automated pattern-based review and does not constitute a formal accessibility audit. Findings should be validated by qualified assessors and tested with assistive technologies before being used for compliance reporting.
 ```
 
 **Overall Assessment Guidelines:**
 - **PASS**: Zero ❌ Fail issues
 - **FAIL**: One or more ❌ Fail issues
-
-**Disclaimer:**
-> This is an automated pattern-based review and does not constitute a formal accessibility audit. Findings should be validated by qualified assessors and tested with assistive technologies before being used for compliance reporting.
 
 ---
 
@@ -489,7 +567,9 @@ Provide a summary of the review:
 | **Understandable** | Readable, predictable, input assistance, language of page and parts |
 | **Robust** | Compatible with assistive technologies, status messages |
 
-**Criteria covered:** 1.1.1, 1.3.1, 1.3.5, 1.4.1, 1.4.10, 1.4.12, 1.4.13, 2.1.1, 2.4.1, 2.4.3, 2.4.7, 3.1.1, 3.1.2, 4.1.2, 4.1.3
+**Criteria covered:** 1.1.1, 1.3.1, 1.3.5, 1.4.1, 1.4.3, 1.4.10, 1.4.11, 1.4.12, 1.4.13, 2.1.1, 2.4.1, 2.4.3, 2.4.7, 2.4.11, 2.5.7, 2.5.8, 3.1.1, 3.1.2, 3.2.6, 3.3.7, 3.3.8, 4.1.2, 4.1.3
+
+**Note:** 4.1.1 Parsing was removed in WCAG 2.2 and is intentionally not covered — do not report it.
 
 ---
 
@@ -511,3 +591,9 @@ Every issue you raise:
 For Government of Canada projects, also check for Canada.ca / WET-BOEW patterns including bilingual `lang` attributes, accessible download links, and properly announced status messages.
 
 The best accessibility review prevents barriers before users encounter them.
+
+---
+
+## Disclaimer
+
+> This is an automated pattern-based review and does not constitute a formal accessibility audit. Findings should be validated by qualified assessors and tested with assistive technologies before being used for compliance reporting.

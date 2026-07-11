@@ -25,11 +25,11 @@ Ce projet n'est pas affilié, endossé ou parrainé par le gouvernement du Canad
 ## Available Skills / <span lang="fr">Compétences disponibles</span>
 
 ### `gc-review-a11y`
-Reviews code for WCAG 2.2 Level AA compliance. Checks semantic HTML, ARIA patterns, focus management, text alternatives, and visual integrity following CAN/ASC - EN 301 549:2024.
+Reviews code against WCAG 2.2 Level AA as its baseline, exceeding the WCAG 2.1 AA minimum incorporated by CAN/ASC - EN 301 549:2024. Checks semantic HTML, ARIA patterns, focus management, text alternatives, contrast, visual integrity, and the new WCAG 2.2 criteria.
 
 <div lang="fr">
 
-Vérifie la conformité du code au niveau AA des WCAG 2.2. Contrôle le HTML sémantique, les patrons ARIA, la gestion du focus, les alternatives textuelles et l'intégrité visuelle selon CAN/ASC - EN 301 549:2024.
+Vérifie le code selon le niveau AA des WCAG 2.2 comme référence, dépassant le minimum WCAG 2.1 AA intégré par la norme CAN/ASC - EN 301 549:2024. Contrôle le HTML sémantique, les patrons ARIA, la gestion du focus, les alternatives textuelles, le contraste, l'intégrité visuelle et les nouveaux critères des WCAG 2.2.
 
 </div>
 
@@ -142,6 +142,31 @@ EOF
 ```
 
 ### Supported configuration by skill / <span lang="fr">Configuration prise en charge par compétence</span>
+
+#### `gc-review-a11y`
+
+Options live under the `"a11y"` namespace in `.gc-review/config.json`.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `a11y.wcagLevel` | `string` | `"AA"` | WCAG 2.2 conformance level to review against (`"AA"` or `"AAA"`) |
+| `a11y.requireSkipLink` | `boolean` | `true` | Flag layouts missing a "skip to main content" link |
+| `a11y.minContrastRatio` | `number` | `4.5` | Minimum contrast ratio for normal text (SC 1.4.3) |
+| `a11y.strictMode` | `boolean` | `false` | When true, warnings are treated as errors |
+| `a11y.exclude` | `string[]` | `[]` | Glob patterns for files to exclude |
+
+```json
+{
+  "version": 1,
+  "a11y": {
+    "wcagLevel": "AA",
+    "requireSkipLink": true,
+    "minContrastRatio": 4.5
+  }
+}
+```
+
+See [`skills/gc-review-a11y/CONFIG.md`](skills/gc-review-a11y/CONFIG.md) for the full schema.
 
 #### `gc-review-iam`
 
