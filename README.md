@@ -52,11 +52,11 @@ Vérifie les schémas de bases de données et le code d'accès aux données pour
 </div>
 
 ### `gc-review-iam`
-Reviews authentication implementations for GoC identity standards. Checks OIDC configuration, session security, scope minimization, and RBAC integration against the Directive on Identity Management and Standard on Identity and Credential Assurance.
+Reviews authentication implementations for GoC identity standards. Checks OIDC configuration, OAuth protocol security (PKCE, state/nonce, redirect URIs), MFA enforcement, session security, token validation, scope minimization, and RBAC integration against the Directive on Identity Management (including Appendix A: Standard on Identity and Credential Assurance), ITSG-33, and ITSP.30.031.
 
 <div lang="fr">
 
-Vérifie les implémentations d'authentification selon les normes d'identité du GC. Contrôle la configuration OIDC, la sécurité des sessions, la minimisation des portées et l'intégration RBAC selon la Directive sur la gestion de l'identité et la Norme sur l'assurance de l'identité et des justificatifs.
+Vérifie les implémentations d'authentification selon les normes d'identité du GC. Contrôle la configuration OIDC, la sécurité du protocole OAuth (PKCE, state/nonce, URI de redirection), l'application de l'authentification multifacteur, la sécurité des sessions, la validation des jetons, la minimisation des portées et l'intégration RBAC selon la Directive sur la gestion de l'identité (y compris l'annexe A : Norme sur l'assurance de l'identité et des justificatifs), l'ITSG-33 et l'ITSP.30.031.
 
 </div>
 
@@ -145,17 +145,45 @@ EOF
 
 #### `gc-review-iam`
 
+All options live under the `"iam"` namespace.
+
 | Field | Type | Description |
 |-------|------|-------------|
-| `additionalIdPs` | `array` | Additional approved identity providers beyond the defaults (Entra ID, GCKey, Sign-In Canada). Each entry has `name` and `issuer` fields. |
+| `iam.additionalIdPs` | `array` | Additional recognized identity providers beyond the defaults (GCKey, GCCF federation broker, CanadaLogin, enterprise directory/Entra ID surface). Each entry has `name` and `issuer` fields. |
+| `iam.assuranceLevel` | `number` | Level of Assurance (1–4) per Appendix A of the Directive on Identity Management. Drives session-lifetime ceilings (ITSP.30.031 v3) and MFA enforcement checks. |
+| `iam.publicFacing` | `boolean` | Declares a public-facing service. Consumer IdPs then produce a ⚠️ Warning (verify GCCF/CanadaLogin brokering) instead of a ❌ Fail. |
+| `iam.strictMode` | `boolean` | When true, warnings are treated as failures (equivalent to `--strict`). |
 
 ```json
 {
-  "additionalIdPs": [
-    { "name": "Departmental ADFS", "issuer": "adfs.department.gc.ca" }
-  ]
+  "version": 1,
+  "iam": {
+    "additionalIdPs": [
+      { "name": "Departmental ADFS", "issuer": "adfs.department.gc.ca" }
+    ],
+    "assuranceLevel": 2,
+    "publicFacing": false,
+    "strictMode": false
+  }
 }
 ```
+
+See [`skills/gc-review-iam/CONFIG.md`](skills/gc-review-iam/CONFIG.md) for the full schema.
+
+<div lang="fr">
+
+Toutes les options se trouvent sous l'espace de noms `"iam"`.
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `iam.additionalIdPs` | `array` | Fournisseurs d'identité reconnus supplémentaires au-delà des services par défaut (CléGC, courtier de fédération GCCF, CanadaLogin, annuaire d'entreprise/Entra ID). Chaque entrée comporte les champs `name` et `issuer`. |
+| `iam.assuranceLevel` | `number` | Niveau d'assurance (1–4) selon l'annexe A de la Directive sur la gestion de l'identité. Détermine les plafonds de durée de session (ITSP.30.031 v3) et les vérifications d'authentification multifacteur. |
+| `iam.publicFacing` | `boolean` | Déclare un service destiné au public. Les fournisseurs d'identité grand public produisent alors un avertissement ⚠️ (vérifier le courtage GCCF/CanadaLogin) au lieu d'un échec ❌. |
+| `iam.strictMode` | `boolean` | Si vrai, les avertissements sont traités comme des échecs (équivalent à `--strict`). |
+
+Voir [`skills/gc-review-iam/CONFIG.md`](skills/gc-review-iam/CONFIG.md) pour le schéma complet.
+
+</div>
 
 #### `gc-review-im`
 
