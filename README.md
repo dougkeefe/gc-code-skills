@@ -20,6 +20,8 @@ This project is not affiliated with, endorsed by, or sponsored by the Government
 Ce projet n'est pas affilié, endossé ou parrainé par le gouvernement du Canada. Les informations fournies proviennent de politiques et de normes du gouvernement du Canada accessibles au public et sont fournies à des fins éducatives et informatives uniquement. Cet outil ne remplace pas les processus formels d'évaluation et d'autorisation de sécurité (EAS).
 </div>
 
+Policy references used by these skills are catalogued in [REFERENCES.md](REFERENCES.md). / <span lang="fr">Les références de politiques utilisées par ces compétences sont cataloguées dans [REFERENCES.md](REFERENCES.md).</span>
+
 ---
 
 ## Available Skills / <span lang="fr">Compétences disponibles</span>
