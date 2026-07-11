@@ -43,11 +43,11 @@ Vérifie la conformité du code aux exigences de sécurité Protégé B. Évalue
 </div>
 
 ### `gc-review-im`
-Reviews database schemas and data access code for information management compliance. Checks mandatory metadata fields, retention policies, soft deletes, and audit requirements per the Directive on Service and Digital.
+Reviews database schemas and data access code for information management compliance. Checks a metadata baseline (per the LAC/TBS digital archival records metadata standards), disposition-aware retention and deletion, searchability, and audit requirements per the Directive on Service and Digital.
 
 <div lang="fr">
 
-Vérifie les schémas de bases de données et le code d'accès aux données pour la conformité en gestion de l'information. Contrôle les champs de métadonnées obligatoires, les politiques de conservation, la suppression douce et les exigences d'audit selon la Directive sur les services et le numérique.
+Vérifie les schémas de bases de données et le code d'accès aux données pour la conformité en gestion de l'information. Contrôle une base de référence de métadonnées (selon les normes de métadonnées BAC/SCT pour les documents d'archives numériques), la conservation et la suppression tenant compte de la disposition, la repérabilité et les exigences d'audit selon la Directive sur les services et le numérique.
 
 </div>
 
@@ -159,13 +159,27 @@ EOF
 
 #### `gc-review-im`
 
+All `gc-review-im` options live under the `"im"` namespace key in `.gc-review/config.json` (alongside the required top-level `"version": 1`).
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `requiredMetadata` | `string[]` | `["record_id", "creator_id", "date_created", "language", "classification"]` | Metadata fields required on business record models |
-| `softDeleteFields` | `string[]` | `["deleted_at", "is_deleted", "archived_at"]` | Field names that indicate soft delete support |
-| `retentionFields` | `string[]` | `["retention_schedule", "disposition_date", "retention_code", "retention_period"]` | Field names indicating retention/disposition support |
-| `exclude` | `string[]` | `[]` | Glob patterns for files to exclude |
-| `strictMode` | `boolean` | `false` | When true, warnings are treated as errors |
+| `im.requiredMetadata` | `string[]` | `["record_id", "creator_id", "date_created", "language", "classification"]` | Metadata baseline fields checked on business-value record models (⚠️ Warning design guidance) |
+| `im.softDeleteFields` | `string[]` | `["deleted_at", "is_deleted", "archived_at"]` | Field names that indicate soft delete support |
+| `im.retentionFields` | `string[]` | `["retention_schedule", "disposition_date", "retention_code", "retention_period"]` | Field names indicating retention/disposition support |
+| `im.exclude` | `string[]` | `[]` | Glob patterns for files to exclude |
+| `im.includePatterns` | `string[]` | `[]` | Additional glob patterns for files to include |
+| `im.strictMode` | `boolean` | `false` | When true, warnings are treated as errors |
+| `im.transitoryPatterns` | `string[]` | `["*_sessions", "*_jobs", "*_cache", "*_tokens", "*_queue", "*_join"]` | Model/table name patterns classified as transitory (exempt from the metadata baseline) |
+| `im.businessRecordPatterns` | `string[]` | `[]` | Model/table name patterns always classified as business-value records |
+
+```json
+{
+  "version": 1,
+  "im": {
+    "exclude": ["**/test/**"]
+  }
+}
+```
 
 See [`skills/gc-review-im/CONFIG.md`](skills/gc-review-im/CONFIG.md) for the full schema.
 

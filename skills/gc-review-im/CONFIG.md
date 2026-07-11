@@ -11,19 +11,25 @@ This document describes the configuration schema for the `gc-review-im` skill.
 
 If no config exists, default settings are used.
 
+All `gc-review-im` options live under the `"im"` namespace key. The top level of the file contains `"version"` plus one namespace object per skill.
+
 ---
 
-## Configuration Schema
+## Configuration Schema (defaults shown)
 
 ```json
 {
   "version": 1,
-  "requiredMetadata": ["record_id", "creator_id", "date_created", "language", "classification"],
-  "softDeleteFields": ["deleted_at", "is_deleted", "archived_at"],
-  "retentionFields": ["retention_schedule", "disposition_date", "retention_code", "retention_period"],
-  "exclude": ["**/test/**", "**/tests/**", "*.spec.ts", "*.test.ts"],
-  "includePatterns": [],
-  "strictMode": false
+  "im": {
+    "requiredMetadata": ["record_id", "creator_id", "date_created", "language", "classification"],
+    "softDeleteFields": ["deleted_at", "is_deleted", "archived_at"],
+    "retentionFields": ["retention_schedule", "disposition_date", "retention_code", "retention_period"],
+    "exclude": [],
+    "includePatterns": [],
+    "strictMode": false,
+    "transitoryPatterns": ["*_sessions", "*_jobs", "*_cache", "*_tokens", "*_queue", "*_join"],
+    "businessRecordPatterns": []
+  }
 }
 ```
 
@@ -34,7 +40,7 @@ If no config exists, default settings are used.
 ### version
 **Type:** `number`
 **Required:** Yes
-**Description:** Configuration schema version. Currently `1`.
+**Description:** Configuration schema version. Currently `1`. Lives at the top level of the file (not inside `"im"`).
 
 ```json
 {
@@ -44,11 +50,11 @@ If no config exists, default settings are used.
 
 ---
 
-### requiredMetadata
+### im.requiredMetadata
 **Type:** `string[]`
 **Required:** No
 **Default:** `["record_id", "creator_id", "date_created", "language", "classification"]`
-**Description:** List of metadata fields required on business record models.
+**Description:** Metadata baseline fields checked on business-value record models (Category A). These are ⚠️ Warning design guidance anchored to LAC's *Operational Standard for Digital Archival Records' Metadata* (2023-11-16) and the TBS *Metadata Reference Standard for Digital Archival Records* (2025-06-23) — the GC mandates metadata concepts, not column names.
 
 Each field can have acceptable variants that will be recognized:
 
@@ -63,30 +69,36 @@ Each field can have acceptable variants that will be recognized:
 **Example - Adding custom required field:**
 ```json
 {
-  "requiredMetadata": [
-    "record_id",
-    "creator_id",
-    "date_created",
-    "language",
-    "classification",
-    "department_code"
-  ]
+  "version": 1,
+  "im": {
+    "requiredMetadata": [
+      "record_id",
+      "creator_id",
+      "date_created",
+      "language",
+      "classification",
+      "department_code"
+    ]
+  }
 }
 ```
 
 **Example - Minimal requirements:**
 ```json
 {
-  "requiredMetadata": [
-    "creator_id",
-    "date_created"
-  ]
+  "version": 1,
+  "im": {
+    "requiredMetadata": [
+      "creator_id",
+      "date_created"
+    ]
+  }
 }
 ```
 
 ---
 
-### softDeleteFields
+### im.softDeleteFields
 **Type:** `string[]`
 **Required:** No
 **Default:** `["deleted_at", "is_deleted", "archived_at"]`
@@ -95,19 +107,22 @@ Each field can have acceptable variants that will be recognized:
 **Example:**
 ```json
 {
-  "softDeleteFields": [
-    "deleted_at",
-    "is_deleted",
-    "archived_at",
-    "status",
-    "is_active"
-  ]
+  "version": 1,
+  "im": {
+    "softDeleteFields": [
+      "deleted_at",
+      "is_deleted",
+      "archived_at",
+      "status",
+      "is_active"
+    ]
+  }
 }
 ```
 
 ---
 
-### retentionFields
+### im.retentionFields
 **Type:** `string[]`
 **Required:** No
 **Default:** `["retention_schedule", "disposition_date", "retention_code", "retention_period"]`
@@ -116,19 +131,22 @@ Each field can have acceptable variants that will be recognized:
 **Example:**
 ```json
 {
-  "retentionFields": [
-    "retention_schedule",
-    "disposition_date",
-    "retention_code",
-    "disposal_authority",
-    "records_schedule_code"
-  ]
+  "version": 1,
+  "im": {
+    "retentionFields": [
+      "retention_schedule",
+      "disposition_date",
+      "retention_code",
+      "disposal_authority",
+      "records_schedule_code"
+    ]
+  }
 }
 ```
 
 ---
 
-### exclude
+### im.exclude
 **Type:** `string[]`
 **Required:** No
 **Default:** `[]`
@@ -137,22 +155,25 @@ Each field can have acceptable variants that will be recognized:
 **Common patterns:**
 ```json
 {
-  "exclude": [
-    "**/test/**",
-    "**/tests/**",
-    "**/__tests__/**",
-    "*.spec.ts",
-    "*.test.ts",
-    "**/fixtures/**",
-    "**/seeds/**",
-    "**/migrations/*.down.sql"
-  ]
+  "version": 1,
+  "im": {
+    "exclude": [
+      "**/test/**",
+      "**/tests/**",
+      "**/__tests__/**",
+      "*.spec.ts",
+      "*.test.ts",
+      "**/fixtures/**",
+      "**/seeds/**",
+      "**/migrations/*.down.sql"
+    ]
+  }
 }
 ```
 
 ---
 
-### includePatterns
+### im.includePatterns
 **Type:** `string[]`
 **Required:** No
 **Default:** `[]` (uses built-in patterns)
@@ -161,16 +182,19 @@ Each field can have acceptable variants that will be recognized:
 **Example - Adding custom patterns:**
 ```json
 {
-  "includePatterns": [
-    "**/domain/*.ts",
-    "**/aggregates/**/*.ts"
-  ]
+  "version": 1,
+  "im": {
+    "includePatterns": [
+      "**/domain/*.ts",
+      "**/aggregates/**/*.ts"
+    ]
+  }
 }
 ```
 
 ---
 
-### strictMode
+### im.strictMode
 **Type:** `boolean`
 **Required:** No
 **Default:** `false`
@@ -178,14 +202,67 @@ Each field can have acceptable variants that will be recognized:
 
 ```json
 {
-  "strictMode": true
+  "version": 1,
+  "im": {
+    "strictMode": true
+  }
 }
 ```
 
 **Effect:**
+- Metadata baseline gaps → ❌ Fail (instead of ⚠️ Warning)
 - Non-descriptive field names → ❌ Fail (instead of ⚠️ Warning)
 - Missing audit trail → ❌ Fail (instead of ⚠️ Warning)
 - Missing indexes → ❌ Fail (instead of ⚠️ Warning)
+
+---
+
+### im.transitoryPatterns
+**Type:** `string[]`
+**Required:** No
+**Default:** `["*_sessions", "*_jobs", "*_cache", "*_tokens", "*_queue", "*_join"]`
+**Description:** Glob patterns for model/table names to classify as **transitory/operational** in Step 4.0 (cf. LAC Multi-Institution Disposition Authorization DA 2016/001). Transitory models are exempt from Category A (metadata baseline) and from the ❌ Fail branch of the hard-delete check; deleting transitory information at end of usefulness is permitted under DA 2016/001.
+
+**Example:**
+```json
+{
+  "version": 1,
+  "im": {
+    "transitoryPatterns": [
+      "*_sessions",
+      "*_jobs",
+      "*_cache",
+      "*_tokens",
+      "*_queue",
+      "*_join",
+      "feature_flags",
+      "*_lookup"
+    ]
+  }
+}
+```
+
+---
+
+### im.businessRecordPatterns
+**Type:** `string[]`
+**Required:** No
+**Default:** `[]`
+**Description:** Glob patterns for model/table names to always classify as **business-value records** in Step 4.0 (DSD s. 4.4.10 — information of business value). Overrides `transitoryPatterns` on conflict. Use this to force full Category A/B review for models whose names would otherwise look operational.
+
+**Example:**
+```json
+{
+  "version": 1,
+  "im": {
+    "businessRecordPatterns": [
+      "grant_*",
+      "case_*",
+      "decisions"
+    ]
+  }
+}
+```
 
 ---
 
@@ -196,7 +273,9 @@ Each field can have acceptable variants that will be recognized:
 ```json
 {
   "version": 1,
-  "exclude": ["**/test/**"]
+  "im": {
+    "exclude": ["**/test/**"]
+  }
 }
 ```
 
@@ -205,39 +284,53 @@ Each field can have acceptable variants that will be recognized:
 ```json
 {
   "version": 1,
-  "requiredMetadata": [
-    "record_id",
-    "creator_id",
-    "date_created",
-    "language",
-    "classification",
-    "department_code"
-  ],
-  "softDeleteFields": [
-    "deleted_at",
-    "is_deleted",
-    "archived_at",
-    "status"
-  ],
-  "retentionFields": [
-    "retention_schedule",
-    "disposition_date",
-    "retention_code",
-    "disposal_authority"
-  ],
-  "exclude": [
-    "**/test/**",
-    "**/tests/**",
-    "**/__tests__/**",
-    "*.spec.ts",
-    "*.test.ts",
-    "**/fixtures/**",
-    "**/seeds/**"
-  ],
-  "includePatterns": [
-    "**/domain/**/*.ts"
-  ],
-  "strictMode": false
+  "im": {
+    "requiredMetadata": [
+      "record_id",
+      "creator_id",
+      "date_created",
+      "language",
+      "classification",
+      "department_code"
+    ],
+    "softDeleteFields": [
+      "deleted_at",
+      "is_deleted",
+      "archived_at",
+      "status"
+    ],
+    "retentionFields": [
+      "retention_schedule",
+      "disposition_date",
+      "retention_code",
+      "disposal_authority"
+    ],
+    "exclude": [
+      "**/test/**",
+      "**/tests/**",
+      "**/__tests__/**",
+      "*.spec.ts",
+      "*.test.ts",
+      "**/fixtures/**",
+      "**/seeds/**"
+    ],
+    "includePatterns": [
+      "**/domain/**/*.ts"
+    ],
+    "strictMode": false,
+    "transitoryPatterns": [
+      "*_sessions",
+      "*_jobs",
+      "*_cache",
+      "*_tokens",
+      "*_queue",
+      "*_join"
+    ],
+    "businessRecordPatterns": [
+      "grant_*",
+      "case_*"
+    ]
+  }
 }
 ```
 
@@ -246,17 +339,19 @@ Each field can have acceptable variants that will be recognized:
 ```json
 {
   "version": 1,
-  "requiredMetadata": [
-    "record_id",
-    "creator_id",
-    "date_created",
-    "language",
-    "classification",
-    "department_code",
-    "retention_code"
-  ],
-  "strictMode": true,
-  "exclude": []
+  "im": {
+    "requiredMetadata": [
+      "record_id",
+      "creator_id",
+      "date_created",
+      "language",
+      "classification",
+      "department_code",
+      "retention_code"
+    ],
+    "strictMode": true,
+    "exclude": []
+  }
 }
 ```
 
@@ -285,13 +380,16 @@ Using default configuration.
 
 | Field | Validation |
 |-------|------------|
-| `version` | Must be number, currently `1` |
-| `requiredMetadata` | Must be array of strings |
-| `softDeleteFields` | Must be array of strings |
-| `retentionFields` | Must be array of strings |
-| `exclude` | Must be array of strings (glob patterns) |
-| `includePatterns` | Must be array of strings (glob patterns) |
-| `strictMode` | Must be boolean |
+| `version` | Must be number, currently `1` (top level) |
+| `im` | Must be object; all skill options live inside it |
+| `im.requiredMetadata` | Must be array of strings |
+| `im.softDeleteFields` | Must be array of strings |
+| `im.retentionFields` | Must be array of strings |
+| `im.exclude` | Must be array of strings (glob patterns) |
+| `im.includePatterns` | Must be array of strings (glob patterns) |
+| `im.strictMode` | Must be boolean |
+| `im.transitoryPatterns` | Must be array of strings (glob patterns) |
+| `im.businessRecordPatterns` | Must be array of strings (glob patterns) |
 
 ### Invalid Field Handling
 
@@ -308,12 +406,14 @@ Unknown fields are ignored with a warning:
 ⚠️  Unknown config field: {field_name} (ignored)
 ```
 
+Legacy top-level keys (e.g., `requiredMetadata` outside `"im"`) are treated as unknown fields — move them under `"im"`.
+
 ---
 
 ## Config Resolution
 
 ```
-.gc-review/config.json exists → use project config
+.gc-review/config.json exists → use project config ("im" key)
 .gc-review/config.json missing → use default configuration
 ```
 
@@ -328,7 +428,9 @@ mkdir -p .gc-review
 cat > .gc-review/config.json << 'EOF'
 {
   "version": 1,
-  "exclude": ["**/test/**", "**/tests/**"]
+  "im": {
+    "exclude": ["**/test/**", "**/tests/**"]
+  }
 }
 EOF
 ```
