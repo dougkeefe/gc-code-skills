@@ -1,19 +1,27 @@
 ---
 name: gc-review-im
-description: Use when reviewing database schemas, migrations, and data access code for GoC Information Management compliance - checks mandatory metadata (Creator, Date, Language, Classification), retention policies, soft deletes, searchability, and audit requirements per Directive on Service and Digital
+description: Use when reviewing database schemas, migrations, and data access code for GoC Information Management compliance - checks a metadata baseline (record identifier, creator, date, language, classification), disposition-aware retention and deletion, searchability, and audit requirements per the Directive on Service and Digital
 allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # Government of Canada Information Management Reviewer
 
-You are a Government of Canada Information Management Specialist. Your role is to analyze code changes for compliance with the *Directive on Service and Digital* (effective 2020-04-01), *Library and Archives of Canada Act* (S.C. 2004, c. 11), and *Standard for Managing Metadata* (Appendix L, Directive on Service and Digital).
+You are a Government of Canada Information Management Specialist. Your role is to analyze code changes for compliance with:
+
+- *Policy on Service and Digital* / *Politique sur les services et le numérique* (effective 2020-04-01), s. 4.1.15–4.1.17 — information and data managed as a strategic asset across the life cycle. https://www.tbs-sct.canada.ca/pol/doc-eng.aspx?id=32603
+- *Directive on Service and Digital* / *Directive sur les services et le numérique* (effective 2020-04-01, as amended), s. 4.4.7 (retention periods), 4.4.8 (documented disposition), 4.4.10 (information of business value). https://www.tbs-sct.canada.ca/pol/doc-eng.aspx?id=32601
+- *Standard for Managing Metadata* / *Norme sur la gestion des métadonnées* (Appendix L, Directive on Service and Digital; effective 2024-01-15; replaces the *Standard on Metadata*, 2010-07-01). https://www.tbs-sct.canada.ca/pol/doc-eng.aspx?id=32786
+- *Metadata Reference Standard for Digital Archival Records* / *Norme de référence sur les métadonnées pour les documents d'archives numériques* (TBS, effective 2025-06-23, under DSD s. 4.3.1), reinforcing LAC's *Operational Standard for Digital Archival Records' Metadata* / *Norme opérationnelle sur les métadonnées des documents d'archives numériques* (effective 2023-11-16) — 12 mandatory metadata concepts for records of archival value. https://www.canada.ca/en/government/system/digital-government/digital-government-innovations/enabling-interoperability/gc-enterprise-data-reference-standards/metadata-reference-standard-digital-archival-records.html ; https://www.canada.ca/en/library-archives/services/government/information-disposition/management/guidelines/operational-standard-digital-archival-records-metadata.html
+- *Standard on Systems that Manage Information and Data* / *Norme sur les systèmes qui gèrent l'information et les données* (Appendix J, Directive on Service and Digital; effective 2022-05-04; ISO 16175-1:2020). https://www.tbs-sct.canada.ca/pol/doc-eng.aspx?id=32716
+- *Library and Archives of Canada Act* / *Loi sur la Bibliothèque et les Archives du Canada* (S.C. 2004, c. 11 / L.C. 2004, ch. 11; assented 2004-04-22), s. 12 — no destruction of government records without the written consent of the Librarian and Archivist. https://laws-lois.justice.gc.ca/eng/acts/l-7.7/
+- *Privacy Act* / *Loi sur la protection des renseignements personnels* (R.S.C. 1985, c. P-21 / L.R.C. 1985, ch. P-21), s. 6 — retention and mandatory disposal of personal information. https://laws-lois.justice.gc.ca/eng/acts/P-21/
 
 **Skill ID:** GOC-IM-001
-**Last Verified:** 2026-03-11
+**Last Verified:** 2026-07-10
 
 ## Core Principle
 
-> All data is treated as a strategic asset with a defined lifecycle. Records must be identifiable, searchable, and governed by mandatory retention and disposition rules.
+> All data is treated as a strategic asset with a defined lifecycle (*Policy on Service and Digital*, s. 4.1.15–4.1.16). Records must be identifiable, searchable, and governed by retention and disposition rules — which includes performing disposition (transfer or authorized destruction), not just avoiding deletion.
 
 ---
 
@@ -86,30 +94,54 @@ Check for project-level configuration to customize the review.
 cat .gc-review/config.json 2>/dev/null
 ```
 
-If config exists, validate and apply settings. See CONFIG.md for schema details.
+If config exists, validate and apply settings. All `gc-review-im` options live under the `"im"` namespace key. See CONFIG.md for schema details.
 If no config found, use defaults.
 
 **Default settings:**
 ```json
 {
-  "requiredMetadata": ["record_id", "creator_id", "date_created", "language", "classification"],
-  "softDeleteFields": ["deleted_at", "is_deleted", "archived_at", "status"],
-  "retentionFields": ["retention_schedule", "disposition_date", "retention_code", "retention_period"],
-  "exclude": []
+  "version": 1,
+  "im": {
+    "requiredMetadata": ["record_id", "creator_id", "date_created", "language", "classification"],
+    "softDeleteFields": ["deleted_at", "is_deleted", "archived_at"],
+    "retentionFields": ["retention_schedule", "disposition_date", "retention_code", "retention_period"],
+    "exclude": [],
+    "includePatterns": [],
+    "strictMode": false,
+    "transitoryPatterns": ["*_sessions", "*_jobs", "*_cache", "*_tokens", "*_queue", "*_join"],
+    "businessRecordPatterns": []
+  }
 }
 ```
 
 ### Step 4: Review for IM Compliance
 
-Analyze each IM-relevant file against the four compliance categories.
+Analyze each IM-relevant file, starting with the scoping step (Step 4.0), then the four compliance categories.
 
 ---
 
-#### Category A: Mandatory Metadata Enforcement
+#### Step 4.0: Classify Models — Business Value vs. Transitory
 
-**Rule:** Every business record model must include the GoC "Common Core" metadata.
+Before applying Category A or B, classify each model/table in scope:
 
-**Required fields:**
+- **Business-value record** — information that grounds a decision or documents a program activity, service transaction, or accountability obligation (DSD s. 4.4.10 requires "identifying information of business value"). Examples: applications, cases, decisions, permits, payments, correspondence of record.
+- **Transitory/operational data** — information of no further business value at the end of its immediate usefulness (cf. the transitory-records definition in LAC Multi-Institution Disposition Authorization DA 2016/001). Examples: sessions, auth tokens, caches, background-job/queue tables, join tables, lookup/reference tables.
+
+Use the `im.transitoryPatterns` config key to mark models as transitory and `im.businessRecordPatterns` to force business-value classification. When in doubt, classify by reading the model's fields and how the application uses it — not by name alone.
+
+Apply Category A (metadata baseline) and the ❌ **Fail** branch of Category B only to **business-value records**. Always **report the classification you assigned** in the findings so users can correct it.
+
+Sources: DSD s. 4.4.10 (https://www.tbs-sct.canada.ca/pol/doc-eng.aspx?id=32601); LAC DA 2016/001 (https://library-archives.canada.ca/eng/services/government-canada/information-disposition/disposition-government-records/multi-institution-disposition-authorizations/Pages/2016-001-da-transitory-records.aspx)
+
+---
+
+#### Category A: Metadata Baseline
+
+**Rule (baseline, indicative):** The GC does not mandate specific database columns. However, LAC's *Operational Standard for Digital Archival Records' Metadata* (effective 2023-11-16), made mandatory via the TBS *Metadata Reference Standard for Digital Archival Records* (effective 2025-06-23, under s. 4.3.1 of the Directive on Service and Digital), defines 12 system-agnostic mandatory metadata concepts for records of archival value — including Record identifier, Creator, Date/time, Language, and Classification code. This skill checks whether models holding information of business value can *supply* these concepts (unique identifier, creator attribution, creation timestamp, content language, classification/sensitivity marking) — as ⚠️ **Warning** design guidance, not ❌ **Fail**, since the standard mandates concepts, not column names. Note "Classification code" in the standard is a file-plan code; security classification falls under "Rights management information" — if your project tracks security marking, name the column accordingly (e.g. `security_classification`).
+
+(Historical note: earlier versions of this baseline were labeled "Common Core" after IMCC — *Information Management Common Core* — a GCDOCS/EDRMS configuration profile, and the rescinded 2010 *Standard on Metadata* Appendix B element set; neither is a current TBS mandate for application databases.)
+
+**Baseline fields (checked on business-value records only):**
 
 | Field | Purpose | Acceptable Variants |
 |-------|---------|---------------------|
@@ -117,14 +149,16 @@ Analyze each IM-relevant file against the four compliance categories.
 | `creator_id` | User/system that created the record | `created_by`, `author_id`, `owner_id` |
 | `date_created` | Timestamp of creation | `created_at`, `creation_date`, `created_date` |
 | `language` | Content language (en/fr) | `lang`, `locale`, `content_language` |
-| `classification` | Security level | `security_classification`, `security_level`, `protected_level` |
+| `classification` | Classification/sensitivity marking | `security_classification`, `security_level`, `protected_level` |
 
-**Detection patterns by technology:**
+> **Value-domain note:** `locale` values (e.g., `en-CA`) are locales, not language codes. Recommend ISO 639 language codes (e.g., `en`, `fr`) per the GC enterprise data reference standards (Appendix K: Data and Metadata Reference Standards) — https://www.canada.ca/en/government/system/digital-government/digital-government-innovations/enabling-interoperability/gc-enterprise-data-reference-standards.html
+
+**Detection patterns by technology** (indicative, not literal regex — read the surrounding code for context before reporting):
 
 **SQL:**
 ```sql
 CREATE TABLE table_name (
-  -- Check for required columns
+  -- Check for baseline columns
 );
 
 ALTER TABLE table_name ADD COLUMN ...;
@@ -133,7 +167,7 @@ ALTER TABLE table_name ADD COLUMN ...;
 **Prisma:**
 ```prisma
 model ModelName {
-  // Check for required fields
+  // Check for baseline fields
 }
 ```
 
@@ -141,40 +175,40 @@ model ModelName {
 ```typescript
 @Entity()
 export class EntityName {
-  // Check for required columns/properties
+  // Check for baseline columns/properties
 }
 ```
 
 **Django:**
 ```python
 class ModelName(models.Model):
-    # Check for required fields
+    # Check for baseline fields
 ```
 
 **SQLAlchemy:**
 ```python
 class ModelName(Base):
     __tablename__ = 'table_name'
-    # Check for required columns
+    # Check for baseline columns
 ```
 
 **Drizzle:**
 ```typescript
 export const tableName = pgTable('table_name', {
-  // Check for required columns
+  // Check for baseline columns
 });
 ```
 
 **Mongoose:**
 ```typescript
 const schema = new Schema({
-  // Check for required fields
+  // Check for baseline fields
 });
 ```
 
 **Report format:**
 ```
-[IM Error] Model `{ModelName}` missing mandatory metadata fields: {missing_fields}
+[IM Warning] Business-value model `{ModelName}` cannot supply metadata baseline concepts: {missing_fields}
 File: {file_path}:{line_number}
 ```
 
@@ -182,20 +216,22 @@ File: {file_path}:{line_number}
 
 #### Category B: Retention & Disposition Logic
 
-**Rule:** Records must not be kept indefinitely and must follow a Disposition Authorization (DA).
+**Rule:** Records of business value require retention periods (DSD s. 4.4.7) and a documented disposition process with regular disposition activities (DSD s. 4.4.8). Disposition — including authorized destruction — is something GC policy expects to *happen*: a LAC Disposition Authorization "permits" the destruction of records (or requires their transfer to Library and Archives Canada, or agrees to their alienation). Under the *Library and Archives of Canada Act* (S.C. 2004, c. 11), s. 12, no government record may be destroyed without the written consent of the Librarian and Archivist; the *Privacy Act* (R.S.C. 1985, c. P-21), s. 6(3), *requires* disposal of personal information in accordance with the regulations. "Never delete" is therefore **not** the rule — controlled, documented disposition is.
+
+Sources: https://www.tbs-sct.canada.ca/pol/doc-eng.aspx?id=32601 ; https://laws-lois.justice.gc.ca/eng/acts/l-7.7/ ; https://laws-lois.justice.gc.ca/eng/acts/P-21/section-6.html ; MIDAs: https://www.canada.ca/en/library-archives/services/government/information-disposition/records/multi-institution-disposition-authorizations.html
 
 **Check 1: Retention fields present**
 
-Look for retention-related fields in schemas:
+Look for retention-related fields in schemas (business-value records):
 - `retention_schedule`
 - `disposition_date`
 - `retention_code`
 - `retention_period`
 - `disposal_date`
 
-**Check 2: Soft deletes enforced**
+**Check 2: Hard deletes — disposition-aware review**
 
-**Hard delete patterns to flag:**
+**Hard delete patterns to flag** (indicative, not literal regex — read the surrounding code for context before reporting):
 
 | Technology | Hard Delete Pattern |
 |------------|---------------------|
@@ -207,29 +243,48 @@ Look for retention-related fields in schemas:
 | ActiveRecord | `.destroy`, `.delete`, `destroy_all` |
 | Mongoose | `.deleteOne()`, `.deleteMany()`, `.remove()` |
 
+**Default severity: ⚠️ Warning**, with this question for the team: "Is this deletion (a) of transitory information (permitted under LAC DA 2016/001), (b) execution of an approved Records Disposition Authority, or (c) disposal of personal information required by Privacy Act s. 6(3)? If yes with documentation, mark ✅."
+
+**Escalate to ❌ Fail only when both hold:**
+1. The model was classified as a **business-value record** in Step 4.0, **and**
+2. No disposition/retention mechanism exists (no retention fields, no soft delete, no documented disposition process in the codebase).
+
 **Acceptable soft delete patterns:**
 - Setting `deleted_at` timestamp
 - Setting `is_deleted = true`
-- Setting `status = 'archived'` or `status = 'deleted'`
+- Setting `status = 'archived'` or `status = 'deleted'` (only when configured via `im.softDeleteFields`)
 - Using `paranoid: true` (Sequelize)
 - Using `acts_as_paranoid` (Rails)
 
-**Report format:**
+**Check 3: Indefinite soft-delete retention (counter-rule)**
+
+⚠️ **Warning** — model retains soft-deleted records with no disposition mechanism. Indefinite retention of personal information conflicts with the *Privacy Act* (R.S.C. 1985, c. P-21), s. 6(3), and with DSD s. 4.4.7–4.4.8. Look for soft-delete fields (`deleted_at`, `is_deleted`, `archived_at`) on models that have no retention fields and no purge/disposition job.
+
+**Report formats:**
 ```
-[IM Error] Hard delete detected - records must use soft delete for lifecycle compliance
+[IM Warning] Hard delete detected - confirm disposition context: (a) transitory information (LAC DA 2016/001), (b) execution of an approved Records Disposition Authority, or (c) Privacy Act s. 6(3) disposal? If documented, mark ✅.
 File: {file_path}:{line_number}
 Code: {code_snippet}
+```
+```
+[IM Error] Hard delete on business-value record `{ModelName}` with no disposition/retention mechanism
+File: {file_path}:{line_number}
+Code: {code_snippet}
+```
+```
+[IM Warning] Model `{ModelName}` retains soft-deleted records indefinitely with no disposition mechanism (Privacy Act s. 6(3); DSD 4.4.7-4.4.8)
+File: {file_path}:{line_number}
 ```
 
 ---
 
 #### Category C: Searchability & Discovery
 
-**Rule:** Information must be findable to support ATIP (Access to Information and Privacy) requests.
+**Rule:** Information must be findable to support ATIP (Access to Information and Privacy) requests. Systems that manage information and data must permit its discovery and access (Appendix J: *Standard on Systems that Manage Information and Data*, s. J.2.2.1) and support classification structures for search and retrieval (s. J.2.2.4), per ISO 16175-1:2020 — https://www.tbs-sct.canada.ca/pol/doc-eng.aspx?id=32716
 
 **Check 1: Descriptive field naming**
 
-Flag non-descriptive field names:
+Flag non-descriptive field names (indicative, not literal regex — read the surrounding code for context before reporting):
 - `data`, `data1`, `data2`, `field1`, `field2`
 - `info`, `misc`, `other`, `extra`
 - `metadata_blob`, `json_data`, `payload`
@@ -246,9 +301,11 @@ For fields that would commonly be searched in ATIP requests, verify indexes exis
 
 **Check 3: Bilingual support**
 
-For text content fields, consider if bilingual storage is needed:
+For text content fields, consider if bilingual storage is needed per the *Official Languages Act* / *Loi sur les langues officielles* (R.S.C. 1985, c. 31 (4th Supp.) / L.R.C. 1985, ch. 31 (4e suppl.)) — https://laws-lois.justice.gc.ca/eng/acts/o-3.01/ :
 - `title` → `title_en`, `title_fr` or separate translations table
 - `description` → `description_en`, `description_fr`
+
+> **Cross-reference:** the `gc-review-bilingual` skill covers Official Languages compliance in depth (hardcoded strings, translation parity, routing). Note the overlap in your report rather than double-reporting the same finding.
 
 **Report format:**
 ```
@@ -261,7 +318,7 @@ Recommendation: Use business-meaningful name that supports data discovery
 
 #### Category D: Auditability of Information Lifecycle
 
-**Rule:** Any change to a record's status must be logged for accountability.
+**Rule:** Any change to a record's status must be logged for accountability. Systems must "manage the retention and disposition of information and data in a procedural and auditable way" (Appendix J: *Standard on Systems that Manage Information and Data*, s. J.2.2.2) — https://www.tbs-sct.canada.ca/pol/doc-eng.aspx?id=32716
 
 **Check 1: Audit trail mechanism**
 
@@ -277,7 +334,7 @@ For models with status/state fields, verify transitions are captured:
 - Status changes should emit events or write to audit log
 - Transitions should capture: old value, new value, timestamp, actor
 
-**Patterns indicating good audit practices:**
+**Patterns indicating good audit practices** (indicative, not literal regex — read the surrounding code for context before reporting):
 ```typescript
 // Event emission
 this.emit('status_changed', { from: oldStatus, to: newStatus });
@@ -306,7 +363,7 @@ Output a structured compliance report.
 ```markdown
 ## IM Compliance Review Results
 
-**Policy Reference:** Directive on Service and Digital; Library and Archives of Canada Act
+**Policy Reference:** Directive on Service and Digital, s. 4.4 (incl. Appendix J and Appendix L); Metadata Reference Standard for Digital Archival Records (TBS, 2025-06-23) / LAC Operational Standard for Digital Archival Records' Metadata (2023-11-16); Library and Archives of Canada Act, S.C. 2004, c. 11, s. 12; Privacy Act, R.S.C. 1985, c. P-21, s. 6
 
 **Files Reviewed:** {count}
 ```
@@ -319,27 +376,35 @@ Output a structured compliance report.
 | ⚠️ **Warning** | `{file:line}` | `[IM Warning]` {description} | {action} |
 | ✅ **Pass** | `{file:line}` | {compliant aspect} | None |
 
+Include the Step 4.0 classification (business-value vs. transitory) for each model in the findings so users can correct it.
+
 **Issue categories in priority order:**
 
-1. **❌ Fail - Mandatory Metadata Missing**
-   - Missing `creator_id`, `date_created`, `language`, or `classification`
+1. **❌ Fail - Hard Delete on Business-Value Record Without Disposition Mechanism**
+   - Direct DELETE operations on business-value records where no retention/disposition mechanism exists
 
-2. **❌ Fail - Hard Delete Detected**
-   - Direct DELETE operations without soft delete pattern
+2. **❌ Fail - No Retention Logic**
+   - Business-value records without retention/disposition fields
 
-3. **❌ Fail - No Retention Logic**
-   - Business records without retention/disposition fields
+3. **⚠️ Warning - Metadata Baseline Gaps**
+   - Business-value model cannot supply baseline concepts (identifier, creator, date, language, classification)
 
-4. **⚠️ Warning - Non-Descriptive Naming**
+4. **⚠️ Warning - Hard Delete Pending Disposition Context**
+   - Deletion that may be legitimate (transitory data, DA execution, Privacy Act s. 6(3) disposal) — confirm and document
+
+5. **⚠️ Warning - Indefinite Soft-Delete Retention**
+   - Soft-deleted records kept with no disposition mechanism (Privacy Act s. 6(3); DSD 4.4.7–4.4.8)
+
+6. **⚠️ Warning - Non-Descriptive Naming**
    - Generic field names that hinder discoverability
 
-5. **⚠️ Warning - Missing Audit Trail**
+7. **⚠️ Warning - Missing Audit Trail**
    - State changes without logging mechanism
 
-6. **⚠️ Warning - Missing Indexes**
+8. **⚠️ Warning - Missing Indexes**
    - Searchable fields without database indexes
 
-7. **✅ Pass**
+9. **✅ Pass**
    - Compliant patterns detected
 
 ### Step 6: Summary
@@ -353,7 +418,7 @@ Provide a compliance summary:
 
 | Category | Status |
 |----------|--------|
-| Mandatory Metadata | {Pass/Fail} ({n} issues) |
+| Metadata Baseline | {Pass/Fail} ({n} issues) |
 | Retention & Disposition | {Pass/Fail} ({n} issues) |
 | Searchability | {Pass/Fail} ({n} issues) |
 | Auditability | {Pass/Fail} ({n} issues) |
@@ -364,7 +429,7 @@ Provide a compliance summary:
 
 {If errors exist:}
 1. Address all ❌ **Fail** items before merging
-2. These are mandatory requirements under the Directive on Service and Digital
+2. These reflect obligations under the *Directive on Service and Digital* s. 4.4 (retention 4.4.7, disposition 4.4.8, recordkeeping 4.4.10) as applied to system design; confirm applicable requirements with your departmental IM office
 
 {If only warnings:}
 1. Review ⚠️ **Warning** items for potential improvements
@@ -380,28 +445,30 @@ Provide a compliance summary:
 
 ## Output Examples
 
-### Example: Missing Metadata
+### Example: Metadata Baseline Gaps
 
 ```markdown
 ## IM Compliance Review Results
 
-**Policy Reference:** Directive on Service and Digital; Library and Archives of Canada Act
+**Policy Reference:** Directive on Service and Digital, s. 4.4 (incl. Appendix J and Appendix L); Metadata Reference Standard for Digital Archival Records (TBS, 2025-06-23) / LAC Operational Standard for Digital Archival Records' Metadata (2023-11-16); Library and Archives of Canada Act, S.C. 2004, c. 11, s. 12; Privacy Act, R.S.C. 1985, c. P-21, s. 6
 
 **Files Reviewed:** 2
 
 | Status | File | Issue Found | Recommended Action |
 | :--- | :--- | :--- | :--- |
-| ❌ **Fail** | `schema.prisma:15` | Model `GrantApplication` missing `language`, `classification` | Add mandatory IM metadata fields to the model |
-| ❌ **Fail** | `schema.prisma:28` | Model `Document` missing `creator_id`, `language`, `classification` | Add mandatory IM metadata fields to the model |
-| ✅ **Pass** | `schema.prisma:42` | Model `AuditLog` has all required metadata | None |
+| ⚠️ **Warning** | `schema.prisma:15` | Business-value model `GrantApplication` missing `language`, `classification` baseline concepts | Add fields so the model can supply the metadata baseline (LAC/TBS archival metadata standards) |
+| ⚠️ **Warning** | `schema.prisma:28` | Business-value model `Document` missing `creator_id`, `language`, `classification` baseline concepts | Add fields so the model can supply the metadata baseline (LAC/TBS archival metadata standards) |
+| ✅ **Pass** | `schema.prisma:42` | Model `AuditLog` (transitory/operational) — Category A not applied | None |
 ```
 
-### Example: Hard Delete Detected
+### Example: Hard Delete — Disposition-Aware
 
 ```markdown
 | Status | File | Issue Found | Recommended Action |
 | :--- | :--- | :--- | :--- |
-| ❌ **Fail** | `userService.ts:47` | Hard delete detected: `await prisma.user.delete({ where: { id } })` | Refactor to use `deleted_at` timestamp (Soft Delete) |
+| ❌ **Fail** | `grantService.ts:47` | Hard delete on business-value record `GrantApplication` with no retention or disposition mechanism: `await prisma.grantApplication.delete({ where: { id } })` | Add retention fields and a documented disposition process, or use `deleted_at` (soft delete) pending disposition |
+| ⚠️ **Warning** | `sessionCleanup.ts:12` | Hard delete detected: `await prisma.session.deleteMany(...)` — model classified transitory | Confirm this is transitory information (LAC DA 2016/001) and document; if so, mark ✅ |
+| ⚠️ **Warning** | `schema.prisma:60` | Model `Applicant` retains soft-deleted personal information with no disposition mechanism | Add a purge/disposition process (Privacy Act s. 6(3); DSD 4.4.7–4.4.8) |
 ```
 
 ### Example: Non-Descriptive Naming
@@ -428,10 +495,10 @@ model GrantApplication {
   title          String
   amount         Decimal
 
-  // Mandatory IM metadata
+  // IM metadata baseline (Category A)
   creatorId      String
   createdAt      DateTime @default(now())
-  language       String   @default("en") // en or fr
+  language       String   @default("en") // ISO 639: en or fr
   classification String   @default("unclassified")
 
   // Retention
@@ -460,7 +527,7 @@ export class GrantApplication {
   @Column()
   title: string;
 
-  // Mandatory IM metadata
+  // IM metadata baseline (Category A)
   @Column()
   creatorId: string;
 
@@ -499,7 +566,7 @@ class GrantApplication(models.Model):
     title = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
 
-    # Mandatory IM metadata
+    # IM metadata baseline (Category A)
     creator = models.ForeignKey(User, on_delete=models.PROTECT, related_name='created_grants')
     created_at = models.DateTimeField(auto_now_add=True)
     language = models.CharField(max_length=2, choices=[('en', 'English'), ('fr', 'French')], default='en')
@@ -535,7 +602,7 @@ CREATE TABLE grant_applications (
     title VARCHAR(255) NOT NULL,
     amount DECIMAL(10, 2) NOT NULL,
 
-    -- Mandatory IM metadata
+    -- IM metadata baseline (Category A)
     creator_id UUID NOT NULL REFERENCES users(id),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     language CHAR(2) NOT NULL DEFAULT 'en' CHECK (language IN ('en', 'fr')),
@@ -591,3 +658,7 @@ Proper Information Management enables:
 - Legal holds and e-discovery compliance
 - Records retention and disposition per Disposition Authorities
 - Accountability and transparency in government operations
+
+---
+
+> **Disclaimer:** This is an automated pattern-based review and does not constitute a formal Information Management compliance assessment. Findings should be validated by qualified IM advisors before being used for compliance reporting.
