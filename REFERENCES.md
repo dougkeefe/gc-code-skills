@@ -1,10 +1,10 @@
 # References / <span lang="fr">Références</span>
 
-This file catalogues the policy instruments, statutes, standards, and specification that the seven `gc-review-*` skills cite as the correct or successor anchor for a skill's rules. Verification status is recorded as of **2026-07-10**. Citations, dates, and statuses are taken directly from the audit verification records under `.gc-review/efficacy-audit/`; items that could not be confirmed against an authoritative source are explicitly marked **UNVERIFIED**. The orchestrator skill (`gc-review-all`) makes no standalone policy claims and defers to the domain skills below.
+This file catalogues the policy instruments, statutes, standards, and specification that the seven `gc-review-*` skills cite as the correct or successor anchor for a skill's rules. Verification status is recorded as of **2026-07-10**. Items that could not be confirmed against an authoritative source are explicitly marked **UNVERIFIED**. The orchestrator skill (`gc-review-all`) makes no standalone policy claims and defers to the domain skills below.
 
 <div lang="fr">
 
-Ce fichier répertorie chaque instrument de politique, loi, norme et spécification que citent les sept compétences `gc-review-*` identifié comme l'ancrage correct ou successeur des règles d'une compétence. Le statut de vérification est consigné en date du **2026-07-10**. Les citations, dates et statuts proviennent directement des registres de vérification de l'audit; les éléments qui n'ont pas pu être confirmés auprès d'une source faisant autorité sont explicitement marqués **UNVERIFIED** (non vérifié). La compétence d'orchestration (`gc-review-all`) ne formule aucune affirmation de politique autonome et s'en remet aux compétences de domaine ci-dessous.
+Ce fichier répertorie chaque instrument de politique, loi, norme et spécification que citent les sept compétences `gc-review-*` identifié comme l'ancrage correct ou successeur des règles d'une compétence. Le statut de vérification est consigné en date du **2026-07-10**. Les éléments qui n'ont pas pu être confirmés auprès d'une source faisant autorité sont explicitement marqués **UNVERIFIED** (non vérifié). La compétence d'orchestration (`gc-review-all`) ne formule aucune affirmation de politique autonome et s'en remet aux compétences de domaine ci-dessous.
 
 </div>
 
